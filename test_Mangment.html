@@ -30,6 +30,9 @@
         justify-content: center;
         align-items: center;
         gap: 10px;
+        flex-direction: column;
+        background-color: rgb(27, 27, 27);
+        padding: 30px 0px;
     }
 
     button {
@@ -39,11 +42,14 @@
         border: 1px transparent solid;
         border-radius: 5px;
         font-size: 20px;
-        margin-top: 15px;
     }
 
     .create-test-body {
         margin-top: 15px;
+    }
+
+    .create-test-buttons {
+        margin-top: 20px;
     }
 
     .question-block input {
@@ -67,47 +73,50 @@
 
     <div class="div-body">
         <div class="div-body-content">
-            <button>Create</button>
+            <div class="div button-content">
+                <button>Create</button>
 
-            <button>Edit</button>
+                <button>Edit</button>
 
-            <button>Delete</button>
+                <button>Delete</button>
+            </div>
+
+            <div class="create-test-body">
+                <form action="" id="test-form">
+                    <!-- Single question block -->
+                    <div class="question-block">
+                        <input type="text" name="question[]" placeholder="Enter your question..." required>
             
-        </div>
-
-        <div class="create-test-body">
-            <form action="" id="test-form">
-                <!-- Single question block -->
-                <div class="question-block">
-                    <input type="text" name="question[]" placeholder="Enter your question..." required>
-        
-                    <!-- Select question type -->
-                    <select class="question-type" name="question_type[]">
-                        <option value="" disabled selected>Select question type</option>
-                        <option value="short">Short Answer</option>
-                        <option value="multiple">Multiple Choice</option>
-                    </select>
-        
-                    <!-- Short answer response preview (optional) -->
-                    <div class="short-answer-preview" style="display: none;">
-                        <input type="text" placeholder="User will type their answer here..." disabled>
-                    </div>
-        
-                    <!-- Multiple choice options -->
-                    <div class="multiple-choice-options" style="display: none;">
-                        <div class="choice">
-                            <input type="text" name="choice[]" placeholder="Enter choice">
+                        <!-- Select question type -->
+                        <select class="question-type" name="question_type[]">
+                            <option value="" disabled selected>Select question type</option>
+                            <option value="short">Short Answer</option>
+                            <option value="multiple">Multiple Choice</option>
+                        </select>
+            
+                        <!-- Short answer response preview (optional) -->
+                        <div class="short-answer-preview" style="display: none;">
+                            <input type="text" placeholder="User will type their answer here..." disabled>
                         </div>
-                        <button type="button" class="add-choice-btn">Add another choice</button>
+            
+                        <!-- Multiple choice options -->
+                        <div class="multiple-choice-options" style="display: none;">
+                            <div class="choice">
+                                <input type="text" name="choice[]" placeholder="Enter choice">
+                            </div>
+                            <button type="button" class="add-choice-btn">Add another choice</button>
+                        </div>
                     </div>
-                </div>
-        
-                <!-- Add another question -->
-                <button type="button" id="add-question-btn">Add Another Question</button>
-        
-                <!-- Submit test -->
-                <button type="submit">Submit Test</button>
-            </form>
+
+                    <div class="create-test-buttons">
+                        <!-- Add another question -->
+                        <button type="button" id="add-question-btn">Add Another Question</button>
+                
+                        <!-- Submit test -->
+                        <button type="submit">Submit Test</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </body>
