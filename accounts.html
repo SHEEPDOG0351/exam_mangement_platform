@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounts</title>
+</head>
+
+<style>
+
+    body {
+        background-color: black;
+        color: white;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    .div-body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .div-body-content {
+        width: 40%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    
+</style>
+
+<body>
+    <div class="div-body">
+        <div class="div-body-content">
+            <h1>Accounts</h1>
+            <select>
+                <option class="form-options" value="" disabled selected>All</option>
+                <option class="form-options" value="student">Student</option>
+                <option class="form-options" value="teacher">Teacher</option>
+            </select>
+            {% block body %}
+            {% endblock %}
+        </div>
+    </div>
+    
+</body>
+</html>
