@@ -8,9 +8,71 @@
 
 <style>
 
+    body {
+        background-color: black;
+        color: white;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    .div-body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .div-body-content {
+        width: 40%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    .div-body-content form {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .div-body-content form select {
+        border: 1px transparent solid;
+        border-radius: 5px;
+        padding: 10px 15px;
+        font-size: 20px;
+    }
+
+    .form-options {
+
+    }
+
+    .div-body-content input {
+        border: 1px transparent solid;
+        border-radius: 7px;
+        padding: 10px 15px;
+        font-size: 20px;
+    }
+
 </style>
 
 <body>
     <h1>Sign Up</h1>
+    <div class="div-body">
+        <div class="div-body-content">
+            <form action="">
+                <select>
+                    <option class="form-options" value="" disabled selected>I am...</option>
+                    <option class="form-options" value="student">Student</option>
+                    <option class="form-options" value="teacher">Teacher</option>
+                </select>
+                <input type="text" placeholder="Username">
+                <input type="text" placeholder="Password">
+            </form>
+        </div>
+    </div>
 </body>
 </html>
