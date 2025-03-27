@@ -6,6 +6,20 @@
     <title>Document</title>
 </head>
 <body>
-    
+    <header>
+        <div class="topBar">
+          <div class="">
+            <img src="../static/images/logo.jpg" alt="Logo" class="logo">
+            <ul class="barItem">
+              <li><a href="{{ url_for('index') }}">HOME</a></li>
+              <li><a href="{{ url_for('accounts') }}">Accounts</a></li>
+              <li><a href="{{ url_for('signup') }}">Signup</a></li>
+              <li><a href="{{ url_for('login') }}">Login</a></li>
+              <li><a href="{{ url_for('test_Mangment') }}">Test Mangment</a></li>
+              <li><a href="{{ url_for('take_test') }}">Test</a></li>
+              <li><a href="{{ url_for('') }}"></a></li>
+            </ul>
+          </div>
+      </header>
 </body>
 </html>
