@@ -66,6 +66,13 @@
         font-size: 20px;
     }
 
+    #test-id-input {
+        border: 1px transparent solid;
+        border-radius: 5px;
+        padding: 15px 10px;
+        font-size: 20px;
+    }
+
 </style>
 
 <body>
@@ -114,7 +121,7 @@
 
             <div class="edit-test-body">
                 <form action="" id="edit-tests-form">
-
+                    <input type="text" name="test_id" id="test-id-input" placeholder="Desired Test ID">
                 </form>
             </div>
         </div>
@@ -163,6 +170,18 @@
         });
     });
 });
+
+// ---------------------------------------- "Edit" / "Delete" test functionality JavaScript Code Below ----------------------------------------------------
+
+    async function loadTest(testId) {
+            const response = await fetch(`/api/test/${testId}`);
+            const data = await response.json();
+
+            console.log(data); // test_id, test_name, questions array
+            // Now you can assign it to variables or populate the page
+        }
+
+        loadTest(24); // or dynamically trigger this from a dropdown
 
 </script>
 </html>
