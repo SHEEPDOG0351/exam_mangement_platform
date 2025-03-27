@@ -26,11 +26,7 @@ def TomdaciLifeTwo():
 def HowHow():
     return render_template('take_test.html')
 
-@app.route('/Test_mangment')
+@app.route('/test_management')
 def SayDrake():
-    return render_template('test_mangment.html')
-
-
-
-
+    return render_template('test_management.html')
 
