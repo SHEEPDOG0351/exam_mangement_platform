@@ -90,7 +90,7 @@
                         <!-- Select question type -->
                         <select class="question-type" name="question_type[]">
                             <option value="" disabled selected>Select question type</option>
-                            <option value="short">Short Answer</option>
+                            <option value="short" onclick="">Short Answer</option>
                             <option value="multiple">Multiple Choice</option>
                         </select>
             
@@ -120,4 +120,29 @@
         </div>
     </div>
 </body>
+
+<script>
+    
+    document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".question-type").forEach(select => {
+        select.addEventListener("change", function () {
+            const questionBlock = select.closest(".question-block");
+            const shortAnswer = questionBlock.querySelector(".short-answer-preview");
+            const multipleChoice = questionBlock.querySelector(".multiple-choice-options");
+
+            if (select.value === "short") {
+                shortAnswer.style.display = "block";
+                multipleChoice.style.display = "none";
+            } else if (select.value === "multiple") {
+                multipleChoice.style.display = "block";
+                shortAnswer.style.display = "none";
+            } else {
+                shortAnswer.style.display = "none";
+                multipleChoice.style.display = "none";
+            }
+        });
+    });
+});
+
+</script>
 </html>
