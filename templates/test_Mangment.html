@@ -84,8 +84,6 @@
                 <button>Create</button>
 
                 <button>Edit</button>
-
-                <button>Delete</button>
             </div>
 
             <div class="create-test-body">
@@ -130,6 +128,24 @@
 
 <script>
 
+    // ----------------------------------------- Correct Create / Edit Button functionality Below -------------------------------------------------
+
+    const create_button = document.querySelectorAll(".button-content button")[0];
+    const edit_button = document.querySelectorAll(".button-content button")[1];
+
+    create_button.addEventListener("click", function() {
+
+        // First, ensure the create test body is hidden
+        const create_test_body = document.querySelector(".create-test-body")
+        create_test_body.style.display = "none"
+
+        // Second, display the edit test body
+        const edit_test_body = querySelector(".edit-test-body")
+        edit_test_body.style.display = "flex"
+    })
+
+    // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
+
     const multiple_choice_add_code = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"></div>`
     const where_to_add_code = document.querySelector(".add-choice-btn") // I'm thinking of adding the code above the button
 
@@ -156,7 +172,7 @@
                     else choice.querySelector("input").value = ""; // clear first
                 });
             } else if (select.value === "multiple") {
-                multipleChoice.style.display = "block";
+                multipleChoice.style.display = "flex";
             }
         });
     });
