@@ -122,24 +122,27 @@
 </body>
 
 <script>
+    
     document.addEventListener("DOMContentLoaded", function () {
-        const select = document.querySelector(".question-type");
-        const shortAnswerDiv = document.querySelector(".short-answer");
-        const multipleChoiceDiv = document.querySelector(".multiple-choice");
-
+    document.querySelectorAll(".question-type").forEach(select => {
         select.addEventListener("change", function () {
+            const questionBlock = select.closest(".question-block");
+            const shortAnswer = questionBlock.querySelector(".short-answer-preview");
+            const multipleChoice = questionBlock.querySelector(".multiple-choice-options");
+
             if (select.value === "short") {
-                shortAnswerDiv.style.display = "block";
-                multipleChoiceDiv.style.display = "none";
+                shortAnswer.style.display = "block";
+                multipleChoice.style.display = "none";
             } else if (select.value === "multiple") {
-                multipleChoiceDiv.style.display = "block";
-                shortAnswerDiv.style.display = "none";
+                multipleChoice.style.display = "block";
+                shortAnswer.style.display = "none";
             } else {
-                shortAnswerDiv.style.display = "none";
-                multipleChoiceDiv.style.display = "none";
+                shortAnswer.style.display = "none";
+                multipleChoice.style.display = "none";
             }
         });
     });
-</script>
+});
 
+</script>
 </html>
