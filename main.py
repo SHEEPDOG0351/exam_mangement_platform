@@ -1,32 +1,94 @@
-from flask import Flask, render_template, request
-from sqlalchemy import create_engine, text
-app = Flask(__name__)
-conn_str = "mysql://root:cset155@localhost/exam_management_2"
-engine = create_engine(conn_str, echo = True)
-conn = engine.connect()
+from flask import Flask, render_template, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
 
+app = Flask(__name__)
+
+# Setup MySQL connection for Flask-SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:cset155@localhost/exam_management_2"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+# SQLAlchemy Models
+class Teacher(db.Model):
+    teacher_username = db.Column(db.String(30), primary_key=True)
+    teacher_fullname = db.Column(db.String(30), nullable=False)
+    teacher_password = db.Column(db.String(30), nullable=False)
+    tests = db.relationship('Test', backref='teacher', lazy=True)
+
+class Test(db.Model):
+    test_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    test_name = db.Column(db.String(255), nullable=False)
+    teacher_username = db.Column(db.String(30), db.ForeignKey('teacher.teacher_username'))
+    questions = db.relationship('Question', backref='test', cascade="all, delete-orphan")
+
+class Question(db.Model):
+    __tablename__ = 'Question'
+    question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('test.test_id'), nullable=False)
+    question_text = db.Column(db.Text, nullable=False)
+    question_type = db.Column(db.Enum('short', 'multiple'), nullable=False)
+    choices = db.relationship('Choice', backref='question', cascade="all, delete-orphan")
+
+class Choice(db.Model):
+    __tablename__ = 'Choice'
+    choice_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    question_id = db.Column(db.Integer, db.ForeignKey('question.question_id'), nullable=False)
+    choice_text = db.Column(db.Text, nullable=False)
+    is_correct = db.Column(db.Boolean, default=False)
+
+# Routes
 @app.route('/')
-def MySandwichItWasInnocent():
+def home():
     return render_template('index.html')
 
 @app.route('/Account')
-def ThisIsWhyImDepressedAtNight():
+def account():
     return render_template('accounts.html')
 
-
 @app.route('/Login')
-def YouCanCallMeTiffany():
+def login():
     return render_template('login.html')
 
 @app.route('/Signup')
-def TomdaciLifeTwo():
+def signup():
     return render_template('signup.html')
 
 @app.route('/take_test')
-def HowHow():
+def take_test():
     return render_template('take_test.html')
 
 @app.route('/test_management')
-def SayDrake():
+def test_management():
     return render_template('test_management.html')
 
+
+@app.route('/api/test/<int:test_id>')
+def get_test(test_id):
+    test = Test.query.get_or_404(test_id)
+
+    test_data = {
+        "test_id": test.test_id,
+        "test_name": test.test_name,
+        "questions": []
+    }
+
+    for question in test.questions:
+        question_data = {
+            "question_id": question.question_id,
+            "question_text": question.question_text,
+            "question_type": question.question_type,
+            "choices": []
+        }
+
+        if question.question_type == 'multiple':
+            for choice in question.choices:
+                question_data["choices"].append({
+                    "choice_id": choice.choice_id,
+                    "choice_text": choice.choice_text,
+                    "is_correct": choice.is_correct
+                })
+
+        test_data["questions"].append(question_data)
+
+    return jsonify(test_data)
