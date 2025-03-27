@@ -66,6 +66,19 @@
         font-size: 20px;
     }
 
+    .edit-test-body {
+        display: none;
+    }
+
+    .edit-test-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin-top: 10px;
+        gap: 15px;
+    }
+
     #test-id-input {
         border: 1px transparent solid;
         border-radius: 5px;
@@ -76,6 +89,7 @@
 </style>
 
 <body>
+
     <header>
         <div class="topBar">
           <div class="">
@@ -91,6 +105,7 @@
             </ul>
           </div>
       </header>
+
     <h1>Create, Edit or Delete a Test</h1>
 
     <div class="div-body">
@@ -134,7 +149,10 @@
 
             <div class="edit-test-body">
                 <form action="" id="edit-tests-form">
-                    <input type="text" name="test_id" id="test-id-input" placeholder="Desired Test ID">
+                    <div class="edit-test-content">
+                        <input type="text" name="test_id" id="test-id-input" placeholder="Desired Test ID">
+                        <button type="button" id="load-test-btn">Load Test</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -150,14 +168,25 @@
 
     create_button.addEventListener("click", function() {
 
+        // First, hide the edit test body (in case it's already shown)
+        const edit_test_body = document.querySelector(".edit-test-body")
+        edit_test_body.style.display = "none"
+
+        // Second, show the content within the create test body
+        const create_test_body = document.querySelector(".create-test-body")
+        create_test_body.style.display = "flex"
+    });
+
+    edit_button.addEventListener("click", function() {
+
         // First, ensure the create test body is hidden
         const create_test_body = document.querySelector(".create-test-body")
         create_test_body.style.display = "none"
 
         // Second, display the edit test body
-        const edit_test_body = querySelector(".edit-test-body")
+        const edit_test_body = document.querySelector(".edit-test-body")
         edit_test_body.style.display = "flex"
-    })
+    });
 
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
 
@@ -203,6 +232,89 @@
 });
 
 // ---------------------------------------- "Edit" / "Delete" test functionality JavaScript Code Below ----------------------------------------------------
+
+    const testIdInput = document.getElementById("test-id-input");
+
+    testIdInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // prevent form submission/refresh
+            document.getElementById("load-test-btn").click(); // simulate a click on the Load Test button
+        }
+    });
+
+    document.getElementById("load-test-btn").addEventListener("click", async function () {
+    const testId = document.getElementById("test-id-input").value.trim();
+    if (!testId) return alert("Please enter a test ID.");
+
+    const response = await fetch(`/api/test/${testId}`);
+    const test = await response.json();
+
+    const editContainer = document.getElementById("edit-test-content");
+    editContainer.innerHTML = ""; // clear previous content
+
+    test.questions.forEach((q, index) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.classList.add("question-block");
+
+        // Question input
+        const questionInput = document.createElement("input");
+        questionInput.type = "text";
+        questionInput.value = q.question_text;
+        questionInput.name = `edit_question_${index}`;
+        questionInput.classList.add("editable-question");
+
+        // Question type dropdown
+        const select = document.createElement("select");
+        select.name = `edit_question_type_${index}`;
+        select.classList.add("question-type");
+
+        const shortOption = document.createElement("option");
+        shortOption.value = "short";
+        shortOption.textContent = "Short Answer";
+        if (q.question_type === "short") shortOption.selected = true;
+
+        const multiOption = document.createElement("option");
+        multiOption.value = "multiple";
+        multiOption.textContent = "Multiple Choice";
+        if (q.question_type === "multiple") multiOption.selected = true;
+
+        select.appendChild(shortOption);
+        select.appendChild(multiOption);
+
+        questionDiv.appendChild(questionInput);
+        questionDiv.appendChild(select);
+
+        // If multiple choice, show choices
+        const choiceContainer = document.createElement("div");
+        choiceContainer.classList.add("multiple-choice-options");
+        choiceContainer.style.display = q.question_type === "multiple" ? "block" : "none";
+
+        if (q.question_type === "multiple") {
+            q.choices.forEach(choice => {
+                const choiceDiv = document.createElement("div");
+                choiceDiv.classList.add("choice");
+
+                const choiceInput = document.createElement("input");
+                choiceInput.type = "text";
+                choiceInput.value = choice.choice_text;
+
+                const radio = document.createElement("input");
+                radio.type = "radio";
+                radio.name = `correct_${index}`;
+                radio.checked = choice.is_correct;
+
+                choiceDiv.appendChild(choiceInput);
+                choiceDiv.appendChild(radio);
+                choiceContainer.appendChild(choiceDiv);
+            });
+        }
+
+        questionDiv.appendChild(choiceContainer);
+        editContainer.appendChild(questionDiv);
+    });
+});
+
+
 
     async function loadTest(testId) {
             const response = await fetch(`/api/test/${testId}`);
