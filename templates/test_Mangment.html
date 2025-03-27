@@ -89,23 +89,17 @@
             
                         <!-- Select question type -->
                         <select class="question-type" name="question_type[]">
-                            <option value="" disabled selected>Select question type</option>
-                            <option value="short" onclick="">Short Answer</option>
+                            <option value="short">Short Answer</option>
                             <option value="multiple">Multiple Choice</option>
                         </select>
-            
-                        <!-- Short answer response preview (optional) -->
-                        <div class="short-answer-preview" style="display: none;">
-                            <input type="text" placeholder="User will type their answer here..." disabled>
-                        </div>
             
                         <!-- Multiple choice options -->
                         <div class="multiple-choice-options" style="display: none;">
                             <div class="choice">
                                 <input type="text" name="choice[]" placeholder="Enter choice">
                             </div>
-                            <button type="button" class="add-choice-btn">Add another choice</button>
                         </div>
+                        <button type="button" class="add-choice-btn">Add another choice</button>
                     </div>
 
                     <div class="create-test-buttons">
@@ -122,27 +116,48 @@
 </body>
 
 <script>
+
+    const multiple_choice_add_code = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"></div>`
+    const where_to_add_code = document.querySelector(".add-choice-btn") // I'm thinking of adding the code above the button
+
+    document.querySelectorAll(".add-choice-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const container = button.closest(".multiple-choice-options");
+            button.insertAdjacentHTML("beforebegin", multiple_choice_add_code);
+        });
+    });
     
     document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".question-type").forEach(select => {
         select.addEventListener("change", function () {
             const questionBlock = select.closest(".question-block");
-            const shortAnswer = questionBlock.querySelector(".short-answer-preview");
             const multipleChoice = questionBlock.querySelector(".multiple-choice-options");
 
             if (select.value === "short") {
-                shortAnswer.style.display = "block";
                 multipleChoice.style.display = "none";
+
+                
+                const choices = multipleChoice.querySelectorAll(".choice");
+                choices.forEach((choice, index) => {
+                    if (index > 0) choice.remove(); // remove extra ones
+                    else choice.querySelector("input").value = ""; // clear first
+                });
             } else if (select.value === "multiple") {
                 multipleChoice.style.display = "block";
-                shortAnswer.style.display = "none";
-            } else {
-                shortAnswer.style.display = "none";
-                multipleChoice.style.display = "none";
             }
         });
     });
+
+    // "Add another choice" buttons
+    document.querySelectorAll(".add-choice-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const container = button.closest(".question-block").querySelector(".multiple-choice-options");
+            const html = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"></div>`;
+            button.insertAdjacentHTML("beforebegin", html);
+        });
+    });
 });
+
 
 </script>
 </html>
