@@ -37,6 +37,10 @@ class Choice(db.Model):
     choice_text = db.Column(db.Text, nullable=False)
     is_correct = db.Column(db.Boolean, default=False)
 
+
+
+
+    
 class Student(db.Model):
     __tablename__ = 'student'
     student_fullname = db.Column(db.Text, primary_key=True)
