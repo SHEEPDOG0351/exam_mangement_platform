@@ -42,8 +42,11 @@ class Choice(db.Model):
 def home():
     return render_template('index.html')
 
-@app.route('/Account')
+@app.route('/Account', methods = ['GET', 'POST'])
 def account():
+    account_type = request.args.get('type')
+    if account_type == ' student':
+        account = Student.query.all()
     return render_template('accounts.html')
 
 @app.route('/Login')
