@@ -76,10 +76,32 @@
 
     .create-test-body {
         margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .create-test-buttons {
         margin-top: 20px;
+    }
+
+    .question-title-div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+
+    #question-title {
+        font-size: 20px;
+        padding: 15px 10px;
+        border: 1px transparent solid;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    .question-block {
+        margin: 0 auto;
     }
 
     .question-block input {
@@ -87,6 +109,14 @@
         border-radius: 5px;
         padding: 15px 10px;
         font-size: 20px;
+    }
+
+    .question-block input{
+        margin-bottom: 10px;
+    }
+
+    .add-choice-btn {
+        display: none;
     }
 
     .question-type {
@@ -133,7 +163,7 @@
               <li><a href="{{ url_for('take_test') }}">Test</a></li>
             </ul>
           </div>
-      </header>
+    </header>
 
     <h1>Create, Edit or Delete a Test</h1>
 
@@ -147,9 +177,12 @@
 
             <div class="create-test-body">
                 <form action="" id="test-form">
-                    <!-- Single question block -->
+                    <div class="question-title-div">
+                        <input type="text" name="question-title" id="question-title" placeholder="Test Name" required>
+                    </div>
+                     <!-- Question Block -->
                     <div class="question-block">
-                        <input type="text" name="question[]" placeholder="Enter your question..." required>
+                        <input type="text" name="question[]" placeholder="Question" required>
             
                         <!-- Select question type -->
                         <select class="question-type" name="question_type[]">
@@ -163,6 +196,9 @@
                                 <input type="text" name="choice[]" placeholder="Enter choice">
                             </div>
                         </div>
+                    </div>
+
+                    <div class="multiple-choice-button">
                         <button type="button" class="add-choice-btn">Add another choice</button>
                     </div>
 
@@ -216,12 +252,12 @@
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
 
     const multiple_choice_add_code = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"></div>`
-    const where_to_add_code = document.querySelector(".add-choice-btn") // I'm thinking of adding the code above the button
+    const where_to_add_code = document.querySelector(".question-block")
 
     document.querySelectorAll(".add-choice-btn").forEach(button => {
         button.addEventListener("click", function () {
             const container = button.closest(".multiple-choice-options");
-            button.insertAdjacentHTML("beforebegin", multiple_choice_add_code);
+            where_to_add_code.insertAdjacentHTML("beforeend", multiple_choice_add_code);
         });
     });
     
@@ -233,7 +269,7 @@
 
             if (select.value === "short") {
                 multipleChoice.style.display = "none";
-
+                document.querySelector(".add-choice-btn").style.display = "none"
                 
                 const choices = multipleChoice.querySelectorAll(".choice");
                 choices.forEach((choice, index) => {
@@ -242,6 +278,7 @@
                 });
             } else if (select.value === "multiple") {
                 multipleChoice.style.display = "flex";
+                document.querySelector(".add-choice-btn").style.display = "flex"
             }
         });
     });
