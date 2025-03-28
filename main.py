@@ -81,6 +81,40 @@ def take_test():
 def test_management():
     return render_template('test_management.html')
 
+@app.route('/api/create_test', methods=['POST']) # this is a post method since it's used to send data to SQL database
+def create_test():
+    data = request.get_json() # receives the JSON string from JS (remember, it was stored in the payload object)
+    test_name = data.get("test_name") # Grabs test name from the test_name var in JS file
+    questions_data = data.get("questions", []) # grabs the questions from the created tests stored in the JS's questions var, then stores them in the empty array here
+
+    # Temporary teacher for demo (adjust this later to the logged-in teacher using session['teacher_id'])
+    teacher = Teacher.query.first() # i think this will use the MR.C value as it's the only value in the teachers table thus far for a teacher's name
+
+    new_test = Test(test_name=test_name, teacher=teacher) # creates a var to store the test data for the teacher and test name column's
+    db.session.add(new_test) # then adds the values from the line above to the session var
+    db.session.flush()  # Get new_test.test_id before commit
+
+    for q in questions_data: # loops through the array of question data, iterating over each question one at a time
+        question = Question( # using the Question object created far above, we assign the required Question's property's their expected values
+            test_id=new_test.test_id, # assigns test_ID 
+            question_text=q["question_text"], # assigns the question's question (it's text)
+            question_type=q["question_type"] # and assigns type whether the question is short or MC
+        )
+        db.session.add(question) # then adds this data to the database
+        db.session.flush()
+
+        if q["question_type"] == "multiple": # if type for question is MC
+            for c in q["choices"]: # for choice in the questions choices
+                choice = Choice( # assigns the choices the user can select to the predefined Choice object created far above, then assigns it's values below
+                    question_id=question.question_id, # assigns question ID the choice belongs to
+                    choice_text=c["choice_text"], # assigns the choice's text
+                    is_correct=c.get("is_correct", False) # if a choices value has a is_correct value, then the system uses that value for determining if the question is correct, if not, the value is set to False to avoid erroring
+                )
+                db.session.add(choice) # actually adds the choice to the choices table
+
+    db.session.commit() # adds all changes and sends the data to the database
+    return jsonify({"message": "Test created successfully", "test_id": new_test.test_id}), 201 # tells us the test was created, and gives us the test ID created for said test
+
 
 @app.route('/api/test/<int:test_id>')
 def get_test(test_id):
