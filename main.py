@@ -11,19 +11,19 @@ db = SQLAlchemy(app)
 
 # SQLAlchemy Models
 class Teacher(db.Model):
-    teacher_username = db.Column(db.String(30), primary_key=True)
-    teacher_fullname = db.Column(db.String(30), nullable=False)
+    teacher_username = db.Column(db.String(30), nullable=False)
+    teacher_fullname = db.Column(db.String(30), primary_key=True)
     teacher_password = db.Column(db.String(30), nullable=False)
     tests = db.relationship('Test', backref='teacher', lazy=True)
 
 class Test(db.Model):
     test_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     test_name = db.Column(db.String(255), nullable=False)
-    teacher_username = db.Column(db.String(30), db.ForeignKey('teacher.teacher_username'))
+    teacher_fullname = db.Column(db.String(30), db.ForeignKey('teacher.teacher_fullname'))
     questions = db.relationship('Question', backref='test', cascade="all, delete-orphan")
 
 class Question(db.Model):
-    __tablename__ = 'Question'
+    __tablename__ = 'question'
     question_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     test_id = db.Column(db.Integer, db.ForeignKey('test.test_id'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
@@ -31,7 +31,7 @@ class Question(db.Model):
     choices = db.relationship('Choice', backref='question', cascade="all, delete-orphan")
 
 class Choice(db.Model):
-    __tablename__ = 'Choice'
+    __tablename__ = 'choice'
     choice_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     question_id = db.Column(db.Integer, db.ForeignKey('question.question_id'), nullable=False)
     choice_text = db.Column(db.Text, nullable=False)
