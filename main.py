@@ -55,9 +55,15 @@ def index():
 @app.route('/Account', methods = ['GET', 'POST'])
 def account():
     account_type = request.args.get('type')
+    accounts = []
     if account_type == ' student':
         account = Student.query.all()
-    return render_template('accounts.html')
+    elif account_type == ' teacher':
+        account = Teacher.query.all()
+    else:
+        account = Student.query.all() + Teacher.query.all()
+
+    return render_template('accounts.html', accounts=accounts, selected_type=account_type)
 
 @app.route('/Login')
 def login():
