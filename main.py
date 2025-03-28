@@ -39,7 +39,7 @@ class Choice(db.Model):
 
 # Routes
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
 @app.route('/Account', methods = ['GET', 'POST'])
@@ -63,7 +63,7 @@ def take_test():
 
 @app.route('/test_management')
 def test_management():
-    return render_template('http://127.0.0.1:5000/test_management')
+    return render_template('test_management.html')
 
 
 @app.route('/api/test/<int:test_id>')
