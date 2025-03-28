@@ -37,6 +37,11 @@ class Choice(db.Model):
     choice_text = db.Column(db.Text, nullable=False)
     is_correct = db.Column(db.Boolean, default=False)
 
+
+
+
+    
+
 # Routes
 @app.route('/')
 def index():
