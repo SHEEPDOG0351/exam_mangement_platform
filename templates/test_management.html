@@ -131,7 +131,6 @@
               <li><a href="{{ url_for('login') }}">Login</a></li>
               <li><a href="{{ url_for('test_management') }}">Test Mangment</a></li>
               <li><a href="{{ url_for('take_test') }}">Test</a></li>
-              <!-- <li><a href="{{ url_for('') }}"></a></li> -->
             </ul>
           </div>
       </header>
@@ -179,7 +178,7 @@
 
             <div class="edit-test-body">
                 <form action="" id="edit-tests-form">
-                    <div class="edit-test-content">
+                    <div class="edit-test-content" id="edit-test-content">
                         <input type="text" name="test_id" id="test-id-input" placeholder="Desired Test ID">
                         <button type="button" id="load-test-btn">Load Test</button>
                     </div>
@@ -199,23 +198,19 @@
     create_button.addEventListener("click", function() {
 
         // First, hide the edit test body (in case it's already shown)
-        const edit_test_body = document.querySelector(".edit-test-body")
-        edit_test_body.style.display = "none"
+        document.querySelector(".edit-test-body").style.display = "none";
 
         // Second, show the content within the create test body
-        const create_test_body = document.querySelector(".create-test-body")
-        create_test_body.style.display = "flex"
+        document.querySelector(".create-test-body").style.display = "flex"
     });
 
     edit_button.addEventListener("click", function() {
 
         // First, ensure the create test body is hidden
-        const create_test_body = document.querySelector(".create-test-body")
-        create_test_body.style.display = "none"
+        document.querySelector(".create-test-body").style.display = "none"
 
         // Second, display the edit test body
-        const edit_test_body = document.querySelector(".edit-test-body")
-        edit_test_body.style.display = "flex"
+        document.querySelector(".edit-test-body").style.display = "flex";
     });
 
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
@@ -278,12 +273,20 @@
 
     const response = await fetch(`/api/test/${testId}`); // grabs the SQL data
     const test = await response.json(); // makes the raw test properties from flask and puts it into a javascript object, for example, makes this possible: test.questions[0].question_text
+    console.log("Loaded test data:", test);
 
     const editContainer = document.getElementById("edit-test-content"); // grabs the edit test content div
     editContainer.innerHTML = ""; // clear previous content
+    // editContainer.innerHTML = "<p>Test loaded!</p>"; // debug thing
+    console.log("Edit container:", editContainer);
 
+    console.log("Number of questions:", test.questions.length);
     test.questions.forEach((q, index) => { // loops through each question
+        console.log("Rendering question:", q);
         const questionDiv = document.createElement("div"); // creates a div for the questions
+        questionDiv.style.border = "1px solid white";
+        questionDiv.style.padding = "10px";
+        questionDiv.style.marginBottom = "10px";
         questionDiv.classList.add("question-block"); // adds a class to said div from above
 
         // Question input
@@ -342,6 +345,11 @@
         questionDiv.appendChild(choiceContainer); // adds the choiceContainer div to the questionDiv
         editContainer.appendChild(questionDiv); // adds the questionDiv to the editContainer div
     });
+
+    const testDebugBox = document.createElement("div");
+    testDebugBox.innerHTML = "<p style='color:lime'>This is a test question container</p>";
+    editContainer.appendChild(testDebugBox);
+
 });
 
 
