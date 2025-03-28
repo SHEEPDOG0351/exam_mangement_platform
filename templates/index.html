@@ -6,6 +6,7 @@
     <title>Document</title>
 </head>
 <style>
+  
 .barItem{
     display: inline-block;
   }
@@ -16,18 +17,21 @@
     align-items:center;
     padding: 10px;
   }
+
   header li {
     float: left;
     display: block;
     padding-left: 8px;
     padding-right: 8px;
   }
+
   .input, .barItem input{
     height: 35px;
     border: none;
     border-radius: 5px;
     margin-left: 10px;
   }
+
   header a{
     text-decoration:none;
     color:black;
@@ -50,7 +54,7 @@
               <li><a href="{{ url_for('account') }}">Accounts</a></li>
               <li><a href="{{ url_for('signup') }}">Signup</a></li>
               <li><a href="{{ url_for('login') }}">Login</a></li>
-              <li><a href="{{ url_for('test_management') }}">Test Mangment</a></li>
+              <li><a href="{{ url_for('test_management') }}">Test Management</a></li>
               <li><a href="{{ url_for('take_test') }}">Test</a></li>
             </ul>
           </div>

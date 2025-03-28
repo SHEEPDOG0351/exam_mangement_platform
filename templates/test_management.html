@@ -129,7 +129,7 @@
               <li><a href="{{ url_for('account') }}">Accounts</a></li>
               <li><a href="{{ url_for('signup') }}">Signup</a></li>
               <li><a href="{{ url_for('login') }}">Login</a></li>
-              <li><a href="{{ url_for('test_management') }}">Test Mangment</a></li>
+              <li><a href="{{ url_for('test_management') }}">Test Management</a></li>
               <li><a href="{{ url_for('take_test') }}">Test</a></li>
             </ul>
           </div>
@@ -345,11 +345,6 @@
         questionDiv.appendChild(choiceContainer); // adds the choiceContainer div to the questionDiv
         editContainer.appendChild(questionDiv); // adds the questionDiv to the editContainer div
     });
-
-    const testDebugBox = document.createElement("div");
-    testDebugBox.innerHTML = "<p style='color:lime'>This is a test question container</p>";
-    editContainer.appendChild(testDebugBox);
-
 });
 
 
