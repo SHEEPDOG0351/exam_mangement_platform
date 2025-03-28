@@ -95,3 +95,5 @@ def get_test(test_id):
         test_data["questions"].append(question_data)
 
     return jsonify(test_data)
+if __name__ == '__main__':
+        app.run(debug=True)
