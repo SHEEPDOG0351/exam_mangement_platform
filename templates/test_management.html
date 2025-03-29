@@ -115,6 +115,15 @@
         margin-bottom: 10px;
     }
 
+    .correct-btn {
+        margin-left: 13px;
+    }
+
+    .selected-correct {
+        /* Use this class for styling the correct questions if desired */
+        border: 2px lightgreen solid;
+    }
+
     .add-choice-btn {
         display: none;
     }
@@ -194,6 +203,7 @@
                         <div class="multiple-choice-options" style="display: none;">
                             <div class="choice">
                                 <input type="text" name="choice[]" placeholder="Enter choice">
+                                <button class="correct-btn">Correct Choice</button>
                             </div>
                         </div>
                     </div>
@@ -251,13 +261,14 @@
 
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
 
-    const multiple_choice_add_code = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"></div>`
+    const multiple_choice_add_code = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"><button class="correct-btn">Correct Choice</button></div>`
     const where_to_add_code = document.querySelector(".question-block")
 
     document.querySelectorAll(".add-choice-btn").forEach(button => {
         button.addEventListener("click", function () {
             const container = button.closest(".multiple-choice-options");
             where_to_add_code.insertAdjacentHTML("beforeend", multiple_choice_add_code);
+            where_to_add_correct_btn.insertAdjacentHTML("beforeend", correct_button)
         });
     });
     
@@ -282,6 +293,30 @@
             }
         });
     });
+
+    document.addEventListener("click", function (event) { // event delegation, waits for a click event on the document, and if so checks to see if it was the correct choice button
+    if (event.target.classList.contains("correct-btn")) { // here is the condition to check if it was the correct choice button
+        event.preventDefault();
+
+        const choiceDiv = event.target.closest(".choice"); // grabs the closet choice div in relation to the correct choice button clicked
+        const allChoices = choiceDiv.parentElement.querySelectorAll(".choice"); // grabs all choices under that question
+
+        allChoices.forEach(div => { // in case the user changes their mind on what's correct, this will ensure to remove any choices which were previously marked as correct's correct attribute
+            div.classList.remove("selected-correct"); // removes the 'selected-correct' class from each choice
+            div.dataset.correct = "false"; // Mark's all choices as incorrect
+        });
+
+        choiceDiv.classList.add("selected-correct"); // adds the 'selected-correct' class to the choice marked as correct by the user (by hitting the correct choice button)
+        choiceDiv.dataset.correct = "true"; // Mark's this choice as correct in the dataset
+    }
+});
+
+
+    document.querySelectorAll(".correct-btn").forEach(button => {
+        button.addEventListener("click", function () {
+
+        })
+    })
 
     // "Add another choice" buttons
     document.querySelectorAll(".add-choice-btn").forEach(button => {
@@ -314,18 +349,20 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             choices: [] // will hold all choices for said question
         };
 
-        if (questionType === "multiple") { // if question type is multiple choice:
+        if (questionType === "multiple") {
+            const choices = block.querySelectorAll(".multiple-choice-options .choice");
 
-            const choices = block.querySelectorAll(".multiple-choice-options .choice input"); // grabs all choices
+            choices.forEach(choice => {
+                const input = choice.querySelector("input");
+                const isCorrect = choice.dataset.correct === "true";
 
-            choices.forEach(choiceInput => { // loops through each choice, grabs their text content, and adds their text and correctness to the choices array above
-                const choiceText = choiceInput.value; //  grabs text content
-                questionData.choices.push({ // pushs value
-                    choice_text: choiceText, // pushs the choice's text to the choices array
-                    is_correct: false // Later: set true if radio is checked
+                questionData.choices.push({
+                    choice_text: input.value,
+                    is_correct: isCorrect
                 });
             });
         }
+
 
         questions.push(questionData); // questionData holds all the data for a question, this line then pushes said question into the questions array
     });
