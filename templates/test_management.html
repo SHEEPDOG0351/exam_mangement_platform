@@ -128,6 +128,11 @@
         display: none;
     }
 
+    .multiple-choice-options {
+        display: flex;
+        flex-direction: column;
+    }
+
     .question-type {
         border: 1px transparent solid;
         border-radius: 5px;
@@ -206,11 +211,13 @@
                                 <button class="correct-btn">Correct Choice</button>
                             </div>
                         </div>
+                        <button type="button" class="add-choice-btn">Add another choice</button>
+                        
                     </div>
 
-                    <div class="multiple-choice-button">
+                    <!-- <div class="multiple-choice-button">
                         <button type="button" class="add-choice-btn">Add another choice</button>
-                    </div>
+                    </div> -->
 
                     <div class="create-test-buttons">
                         <!-- Add another question -->
@@ -261,16 +268,27 @@
 
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
 
-    const multiple_choice_add_code = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"><button class="correct-btn">Correct Choice</button></div>`
-    const where_to_add_code = document.querySelector(".question-block")
+    document.addEventListener("click", function (event) { // event is the button that was clicked
+    if (event.target.classList.contains("add-choice-btn")) { // checks to see if the add choice button was clicked (the button which adds a choice for the user to select)
+        event.preventDefault(); // don't know
 
-    document.querySelectorAll(".add-choice-btn").forEach(button => {
-        button.addEventListener("click", function () {
-            const container = button.closest(".multiple-choice-options");
-            where_to_add_code.insertAdjacentHTML("beforeend", multiple_choice_add_code);
-            where_to_add_correct_btn.insertAdjacentHTML("beforeend", correct_button)
-        });
-    });
+        const questionBlock = event.target.closest(".question-block"); // finds the question block the add choice button resides in
+        const container = questionBlock.querySelector(".multiple-choice-options"); // finds the multiple choice container within said question block
+
+        if (!container) {
+            console.warn("Could not find .multiple-choice-options inside this question block.");
+            return;
+        }
+
+        container.insertAdjacentHTML("beforeend", `
+            <div class="choice">
+                <input type="text" name="choice[]" placeholder="Enter choice">
+                <button class="correct-btn">Correct Choice</button>
+            </div>
+        `); // inserts the next choice within the multiple choice container
+    }
+});
+
     
     document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".question-type").forEach(select => {
@@ -298,8 +316,10 @@
     if (event.target.classList.contains("correct-btn")) { // here is the condition to check if it was the correct choice button
         event.preventDefault();
 
-        const choiceDiv = event.target.closest(".choice"); // grabs the closet choice div in relation to the correct choice button clicked
-        const allChoices = choiceDiv.parentElement.querySelectorAll(".choice"); // grabs all choices under that question
+        const choiceDiv = event.target.closest(".choice");
+        const multipleChoiceContainer = event.target.closest(".multiple-choice-options");
+        const allChoices = multipleChoiceContainer.querySelectorAll(".choice");
+
 
         allChoices.forEach(div => { // in case the user changes their mind on what's correct, this will ensure to remove any choices which were previously marked as correct's correct attribute
             div.classList.remove("selected-correct"); // removes the 'selected-correct' class from each choice
@@ -310,22 +330,6 @@
         choiceDiv.dataset.correct = "true"; // Mark's this choice as correct in the dataset
     }
 });
-
-
-    document.querySelectorAll(".correct-btn").forEach(button => {
-        button.addEventListener("click", function () {
-
-        })
-    })
-
-    // "Add another choice" buttons
-    document.querySelectorAll(".add-choice-btn").forEach(button => {
-        button.addEventListener("click", function () {
-            const container = button.closest(".question-block").querySelector(".multiple-choice-options");
-            const html = `<div class="choice"><input type="text" name="choice[]" placeholder="Enter choice"></div>`;
-            button.insertAdjacentHTML("beforebegin", html);
-        });
-    });
 });
 
 // used for sending to main for SQL creation
@@ -453,59 +457,60 @@ document.getElementById("test-form").addEventListener("submit", async function(e
     });
 
     document.getElementById("load-test-btn").addEventListener("click", async function () { // when the button is pressed, the value in the ID input is grabbed
-    const testId = document.getElementById("test-id-input").value.trim(); // this grabs the value, trims the space
-    if (!testId) return alert("Please enter a test ID."); // if input was empty, alert is created
+        const testId = document.getElementById("test-id-input").value.trim(); // this grabs the value, trims the space
+        if (!testId) return alert("Please enter a test ID."); // if input was empty, alert is created
 
-    const response = await fetch(`/api/test/${testId}`); // grabs the SQL data
-    const test = await response.json(); // makes the raw test properties from flask and puts it into a javascript object, for example, makes this possible: test.questions[0].question_text
-    console.log("Loaded test data:", test);
+        const response = await fetch(`/api/test/${testId}`); // grabs the SQL data
+        const test = await response.json(); // makes the raw test properties from flask and puts it into a javascript object, for example, makes this possible: test.questions[0].question_text
+        console.log("Loaded test data:", test);
 
-    const editContainer = document.getElementById("edit-test-content"); // grabs the edit test content div
-    editContainer.innerHTML = ""; // clear previous content
-    // editContainer.innerHTML = "<p>Test loaded!</p>"; // debug thing
-    console.log("Edit container:", editContainer);
+        const editContainer = document.getElementById("edit-test-content"); // grabs the edit test content div
+        editContainer.innerHTML = ""; // clear previous content
+        // editContainer.innerHTML = "<p>Test loaded!</p>"; // debug thing
+        console.log("Edit container:", editContainer);
 
-    console.log("Number of questions:", test.questions.length);
-    test.questions.forEach((q, index) => { // loops through each question
-        console.log("Rendering question:", q);
-        const questionDiv = document.createElement("div"); // creates a div for the questions
-        questionDiv.style.border = "1px solid white";
-        questionDiv.style.padding = "10px";
-        questionDiv.style.marginBottom = "10px";
-        questionDiv.classList.add("question-block"); // adds a class to said div from above
+        console.log("Number of questions:", test.questions.length);
+        
+        test.questions.forEach((q, index) => { // loops through each question
+            console.log("Rendering question:", q);
+            const questionDiv = document.createElement("div"); // creates a div for the questions
+            questionDiv.style.border = "1px solid white";
+            questionDiv.style.padding = "10px";
+            questionDiv.style.marginBottom = "10px";
+            questionDiv.classList.add("question-block"); // adds a class to said div from above
 
-        // Question input
-        const questionInput = document.createElement("input"); // creates an input tag for the question value
-        questionInput.type = "text"; // ------------------------>
-        questionInput.value = q.question_text; // ----------------------->
-        questionInput.name = `edit_question_${index}`; // --------------->      all manage attributes for the tests, type, value, name, and their class
-        questionInput.classList.add("editable-question"); //--------------> 
+            // Question input
+            const questionInput = document.createElement("input"); // creates an input tag for the question value
+            questionInput.type = "text"; // ------------------------>
+            questionInput.value = q.question_text; // ----------------------->
+            questionInput.name = `edit_question_${index}`; // --------------->      all manage attributes for the tests, type, value, name, and their class
+            questionInput.classList.add("editable-question"); //--------------> 
 
-        // Question type dropdown
-        const select = document.createElement("select"); // a select tag is made allowing the user to change the type of question to MPC or short answer
-        select.name = `edit_question_type_${index}`; // assigns the correct type value
-        select.classList.add("question-type"); // assigns the select tag a class
+            // Question type dropdown
+            const select = document.createElement("select"); // a select tag is made allowing the user to change the type of question to MPC or short answer
+            select.name = `edit_question_type_${index}`; // assigns the correct type value
+            select.classList.add("question-type"); // assigns the select tag a class
 
-        const shortOption = document.createElement("option"); // stores option tag 
-        shortOption.value = "short"; // value assigned = short
-        shortOption.textContent = "Short Answer"; // describes the content within the option tag
-        if (q.question_type === "short") shortOption.selected = true; // sets default value to short for the select tag since in this case the type was short
+            const shortOption = document.createElement("option"); // stores option tag 
+            shortOption.value = "short"; // value assigned = short
+            shortOption.textContent = "Short Answer"; // describes the content within the option tag
+            if (q.question_type === "short") shortOption.selected = true; // sets default value to short for the select tag since in this case the type was short
 
-        const multiOption = document.createElement("option"); // holds an option tag, but meant for use with MCQ's
-        multiOption.value = "multiple"; // sets value to multiple
-        multiOption.textContent = "Multiple Choice"; // sets the visisble text inside the html element to Multiple Choice. So one of the options within the select tag is set to Multiple choice
-        if (q.question_type === "multiple") multiOption.selected = true; // checks to see if the question type is multiple (I think through class name) and if so, assigns multiple as the select tags default value
+            const multiOption = document.createElement("option"); // holds an option tag, but meant for use with MCQ's
+            multiOption.value = "multiple"; // sets value to multiple
+            multiOption.textContent = "Multiple Choice"; // sets the visisble text inside the html element to Multiple Choice. So one of the options within the select tag is set to Multiple choice
+            if (q.question_type === "multiple") multiOption.selected = true; // checks to see if the question type is multiple (I think through class name) and if so, assigns multiple as the select tags default value
 
-        select.appendChild(shortOption); // --------->      I think adds the option tags to the parent select tag
-        select.appendChild(multiOption); // ---------> 
+            select.appendChild(shortOption); // --------->      I think adds the option tags to the parent select tag
+            select.appendChild(multiOption); // ---------> 
 
-        questionDiv.appendChild(questionInput); // ----------->
-        questionDiv.appendChild(select); // ------------------>  I think it adds the input and select tags to the question block div
+            questionDiv.appendChild(questionInput); // ----------->
+            questionDiv.appendChild(select); // ------------------>  I think it adds the input and select tags to the question block div
 
-        // If multiple choice, show choices
-        const choiceContainer = document.createElement("div"); // stores a div element
-        choiceContainer.classList.add("multiple-choice-options"); // adds class name to said div
-        choiceContainer.style.display = q.question_type === "multiple" ? "block" : "none"; // if multiple = question_type's value, assigns display property's value to block, if not multiple, then none
+            // If multiple choice, show choices
+            const choiceContainer = document.createElement("div"); // stores a div element
+            choiceContainer.classList.add("multiple-choice-options"); // adds class name to said div
+            choiceContainer.style.display = q.question_type === "multiple" ? "block" : "none"; // if multiple = question_type's value, assigns display property's value to block, if not multiple, then none
 
         if (q.question_type === "multiple") { // if multiple choice
             q.choices.forEach(choice => { // choices (somehow) holds the value for each choice within the multiple choice question, and choice will be the variable which holds the value for the currently iterated over choice, as we're looping through them
