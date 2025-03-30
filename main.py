@@ -65,12 +65,14 @@ def account():
 
     return render_template('accounts.html', accounts=accounts, selected_type=account_type)
 
-@app.route('/Login')
+@app.route('/Login', methods = ['GET', 'POST'])
 def login():
+
     return render_template('login.html')
 
 @app.route('/Signup')
 def signup():
+
     return render_template('signup.html')
 
 @app.route('/take_test')
