@@ -251,7 +251,10 @@
                     </div>
                 </form>
             </div>
-            <button id="apply-changes-button">Apply Changes</button>
+            <div class="add-apply-buttons-div">
+                <button id="add-question-btn" style="margin-bottom: 10px;">Add Question</button>
+                <button id="apply-changes-button">Apply Changes</button>
+            </div>
         </div>
     </div>
 </body>
@@ -330,7 +333,7 @@
         console.log("add another choice button clicked!")
 
         // get last question block:
-        const questionBlocks = document.querySelectorAll(".question-block");
+        const questionBlocks = document.querySelectorAll("#edit-test-content .question-block");
         const lastQuestion = questionBlocks[questionBlocks.length - 1];
 
         // html we want to add
@@ -362,9 +365,15 @@
         const questionBlock = event.target.closest(".question-block");
         const container = questionBlock.querySelector(".multiple-choice-options");
 
+        const allQuestions = document.querySelectorAll(".question-block");
+        const index = Array.from(allQuestions).indexOf(questionBlock);
+
+        const questionIndex = [...document.querySelectorAll(".question-block")].indexOf(questionBlock);
+
         container.insertAdjacentHTML("beforeend", `
             <div class="choice">
                 <input type="text" name="choice[]" placeholder="Enter choice">
+                <input type="radio" name="correct_${questionIndex}" class="correct-radio">
                 <button class="correct-btn">Correct Choice</button>
             </div>
         `);
@@ -537,6 +546,32 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             }
         });
 
+        const add_question_btn = document.getElementById("add-question-btn")
+        add_question_btn.addEventListener("click", function () { // event listener for adding question button
+            console.log("add question button press detected!")
+            const div_to_add_code = document.getElementById("edit-test-content")
+            const questionIndex = document.querySelectorAll(".question-block").length;
+            const html = `<div class="question-block">
+                <input type="text" name="question[]" placeholder="Question" required>
+
+                <select class="question-type" name="question_type[]">
+                    <option value="short">Short Answer</option>
+                    <option value="multiple">Multiple Choice</option>
+                </select>
+
+                <div class="multiple-choice-options" style="display: none;">
+                    <div class="choice">
+                        <input type="text" name="choice[]" placeholder="Enter choice">
+                        <input type="radio" name="correct_${questionIndex}" class="correct-radio">
+                        <button class="correct-btn">Correct Choice</button>
+                    </div>
+                </div>
+                <button type="button" class="add-choice-btn">Add another choice</button>
+            </div>`;
+
+            div_to_add_code.insertAdjacentHTML("beforeend", html)
+        })
+
 
 // Now render the rest of the test content below
 
@@ -641,7 +676,10 @@ document.getElementById("test-form").addEventListener("submit", async function(e
         const questionBlocks = document.querySelectorAll(".question-block");
 
         questionBlocks.forEach((block, index) => {
-            const questionText = block.querySelector("input.editable-question").value;
+            const questionTextInput = block.querySelector("input.editable-question") || block.querySelector("input[name='question[]']");
+            if (!questionTextInput || questionTextInput.value.trim() === "") return;  // <== SKIP empty question blocks
+
+            const questionText = questionTextInput.value.trim();
             const questionType = block.querySelector("select.question-type").value;
 
             const questionData = {
@@ -652,23 +690,31 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 
             if (questionType === "multiple") {
                 const choices = block.querySelectorAll(".choice");
+
+                const choiceGroupName = `correct_${index}`;
+
                 choices.forEach(choice => {
                     const choiceInput = choice.querySelector("input[type='text']");
                     const radioInput = choice.querySelector("input[type='radio']");
-                    questionData.choices.push({
-                        choice_text: choiceInput.value,
-                        is_correct: radioInput.checked
-                    });
+
+                    if (choiceInput && radioInput) {
+                        questionData.choices.push({
+                            choice_text: choiceInput.value,
+                            is_correct: radioInput.checked
+                        });
+                    }
                 });
             }
-
             updatedQuestions.push(questionData);
         });
+
 
         const updatedPayload = {
             test_name: `Updated Test ${testId}`,  // optionally let the user edit this too
             questions: updatedQuestions
         };
+
+        console.log(updatedPayload)
 
         // Send the updated version as a new test
         const res = await fetch("/api/create_test", {
@@ -682,8 +728,6 @@ document.getElementById("test-form").addEventListener("submit", async function(e
         alert("Changes successfully applied!");
     });
 });
-
-
 
     async function loadTest(testId) {
             const response = await fetch(`/api/test/${testId}`);
