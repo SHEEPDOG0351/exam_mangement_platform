@@ -77,9 +77,7 @@
         font-size: 20px;
     }
 
-    .form-options {
-
-    }
+    
 
     .div-body-content input {
         border: 1px transparent solid;
@@ -125,14 +123,14 @@
                     <option class="form-options" value="student">Student</option>
                     <option class="form-options" value="teacher">Teacher</option>
                 </select>
-                <input type="text" placeholder="Full Name">
-                <input type="text" placeholder="Username">
-                <input type="text" placeholder="Password">
+                <input type="text" name="fullname" placeholder="Full Name">
+                <input type="text" name="username" placeholder="Username">
+                <input type="text" name="password" placeholder="Password">
             </form>
             <button>Login</button>
         </div>
     </div>
-    {% block body %}
+    <!-- {% block body %}
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         <ul>
@@ -142,6 +140,6 @@
         </ul>
     {% endif %}
 {% endwith %}
-    {% endblock %}
+    {% endblock %} -->
 </body>
 </html>

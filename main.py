@@ -6,7 +6,6 @@ app = Flask(__name__)
 # Setup MySQL connection for Flask-SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:cset155@localhost/exam_management_2"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'matthew'
 db = SQLAlchemy(app)
 
 # SQLAlchemy Models
@@ -91,31 +90,29 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        account_type = request.form.get('account_type')  
-        if not username or not password:
-            flash("Username and password are required", "danger")
-            return render_template('login.html')
+        fullname = request.form['fullname']
+        account_type = request.form['account_type']
 
+        if not username or not password or not fullname:
+            error = "All fields (Full Name, Username, and Password) are required"
+            return render_template('login.html', error=error)
         if account_type == 'student':
-            
-            student = Student.query.filter_by(student_username=username).first()
+            student = Student.query.filter_by(student_username=username, student_fullname=fullname).first()
             if student and student.student_password == password:
-                flash("Login successful", "success")
-                return render_template('index.html')  
+                return render_template('index.html')
             else:
-                flash("Invalid username or password for student", "danger")
-        
+                error = "Invalid username, full name, or password for student"
+                return render_template('login.html', error=error)
         elif account_type == 'teacher':
-
-            teacher = Teacher.query.filter_by(teacher_username=username).first()
+            teacher = Teacher.query.filter_by(teacher_username=username, teacher_fullname=fullname).first()
             if teacher and teacher.teacher_password == password:
-                flash("Login successful", "success")
                 return render_template('index.html')  
             else:
-                flash("Invalid username or password for teacher", "danger")
-
+                error = "Invalid username, full name, or password for teacher"
+                return render_template('login.html', error=error)
         else:
-            flash("Invalid account type selected", "danger")
+            error = "Invalid account type selected"
+            return render_template('login.html', error=error)
     return render_template('login.html')
 
 @app.route('/Signup', methods = ['GET', 'POST'])
