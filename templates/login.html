@@ -117,7 +117,7 @@
 
     <div class="div-body">
         <div class="div-body-content">
-            <form action="">
+            <form action="/Login" method="POST">
                 <select>
                     <option class="form-options" value="" disabled selected>I am...</option>
                     <option class="form-options" value="student">Student</option>
@@ -130,16 +130,5 @@
             <button>Login</button>
         </div>
     </div>
-    <!-- {% block body %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        <ul>
-        {% for category, message in messages %}
-            <li class="flash {{ category }}">{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
-    {% endblock %} -->
 </body>
 </html>
