@@ -124,9 +124,9 @@
         border: 2px lightgreen solid;
     }
 
-    .add-choice-btn {
+    /* .add-choice-btn {
         display: none;
-    }
+    } */
 
     .multiple-choice-options {
         display: flex;
@@ -212,16 +212,11 @@
                             </div>
                         </div>
                         <button type="button" class="add-choice-btn">Add another choice</button>
-                        
                     </div>
-
-                    <!-- <div class="multiple-choice-button">
-                        <button type="button" class="add-choice-btn">Add another choice</button>
-                    </div> -->
 
                     <div class="create-test-buttons">
                         <!-- Add another question -->
-                        <button type="button" id="add-question-btn">Add Another Question</button>
+                        <button type="button" class="add-question-btn">Add Another Question</button>
                 
                         <!-- Submit test -->
                         <button type="submit">Submit Test</button>
@@ -268,48 +263,30 @@
 
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
 
-    document.addEventListener("click", function (event) { // event is the button that was clicked
-    if (event.target.classList.contains("add-choice-btn")) { // checks to see if the add choice button was clicked (the button which adds a choice for the user to select)
-        event.preventDefault(); // don't know
-
-        const questionBlock = event.target.closest(".question-block"); // finds the question block the add choice button resides in
-        const container = questionBlock.querySelector(".multiple-choice-options"); // finds the multiple choice container within said question block
-
-        if (!container) {
-            console.warn("Could not find .multiple-choice-options inside this question block.");
-            return;
-        }
-
-        container.insertAdjacentHTML("beforeend", `
-            <div class="choice">
-                <input type="text" name="choice[]" placeholder="Enter choice">
-                <button class="correct-btn">Correct Choice</button>
-            </div>
-        `); // inserts the next choice within the multiple choice container
-    }
-});
-
-    
     document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".question-type").forEach(select => {
-        select.addEventListener("change", function () {
+        document.addEventListener("change", function (event) {
+
+        if (event.target.classList.contains("question-type")) {
+            const select = event.target;
             const questionBlock = select.closest(".question-block");
             const multipleChoice = questionBlock.querySelector(".multiple-choice-options");
+            const addChoiceBtn = questionBlock.querySelector(".add-choice-btn");
 
             if (select.value === "short") {
                 multipleChoice.style.display = "none";
-                document.querySelector(".add-choice-btn").style.display = "none"
-                
+                addChoiceBtn.style.display = "none";
+
+                // Clear any previous choices
                 const choices = multipleChoice.querySelectorAll(".choice");
                 choices.forEach((choice, index) => {
-                    if (index > 0) choice.remove(); // remove extra ones
-                    else choice.querySelector("input").value = ""; // clear first
+                    if (index > 0) choice.remove(); // remove all but one
+                    else choice.querySelector("input").value = ""; // clear the first input
                 });
             } else if (select.value === "multiple") {
-                multipleChoice.style.display = "flex";
-                document.querySelector(".add-choice-btn").style.display = "flex"
+                multipleChoice.style.display = "block";
+                addChoiceBtn.style.display = "block";
             }
-        });
+        }
     });
 
     document.addEventListener("click", function (event) { // event delegation, waits for a click event on the document, and if so checks to see if it was the correct choice button
@@ -328,6 +305,48 @@
 
         choiceDiv.classList.add("selected-correct"); // adds the 'selected-correct' class to the choice marked as correct by the user (by hitting the correct choice button)
         choiceDiv.dataset.correct = "true"; // Mark's this choice as correct in the dataset
+    } else if (event.target.classList.contains("add-question-btn")) {
+        event.preventDefault();
+
+        // get last question block:
+        const questionBlocks = document.querySelectorAll(".question-block");
+        const lastQuestion = questionBlocks[questionBlocks.length - 1];
+
+        // html we want to add
+        const html = `<div class="question-block">
+                        <input type="text" name="question[]" placeholder="Question" required>
+            
+                        <!-- Select question type -->
+                        <select class="question-type" name="question_type[]">
+                            <option value="short">Short Answer</option>
+                            <option value="multiple">Multiple Choice</option>
+                        </select>
+            
+                        <!-- Multiple choice options -->
+                        <div class="multiple-choice-options" style="display: none;">
+                            <div class="choice">
+                                <input type="text" name="choice[]" placeholder="Enter choice">
+                                <button class="correct-btn">Correct Choice</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-choice-btn">Add another choice</button>
+                        
+                    </div>`
+        
+        // insert html after last question. Afterend tells it to insert after the end of the last question block like so:
+        lastQuestion.insertAdjacentHTML("afterend", html)
+    } else if (event.target.classList.contains("add-choice-btn")) {
+        event.preventDefault();
+
+        const questionBlock = event.target.closest(".question-block");
+        const container = questionBlock.querySelector(".multiple-choice-options");
+
+        container.insertAdjacentHTML("beforeend", `
+            <div class="choice">
+                <input type="text" name="choice[]" placeholder="Enter choice">
+                <button class="correct-btn">Correct Choice</button>
+            </div>
+        `);
     }
 });
 });
@@ -445,6 +464,8 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 });
 
 
+
+
 // ---------------------------------------- "Edit" / "Delete" test functionality JavaScript Code Below ----------------------------------------------------
 
     const testIdInput = document.getElementById("test-id-input"); // targets the input where the user enters an ID 
@@ -456,7 +477,7 @@ document.getElementById("test-form").addEventListener("submit", async function(e
         }
     });
 
-    document.getElementById("load-test-btn").addEventListener("click", async function () { // when the button is pressed, the value in the ID input is grabbed
+    document.getElementById("load-test-btn").addEventListener("click", async function () { // when the button is pressed, the value in the ID input is grabbed. Also, this is the listener and what happens to the edit test body after the load test button is clicked
         const testId = document.getElementById("test-id-input").value.trim(); // this grabs the value, trims the space
         if (!testId) return alert("Please enter a test ID."); // if input was empty, alert is created
 
@@ -465,8 +486,38 @@ document.getElementById("test-form").addEventListener("submit", async function(e
         console.log("Loaded test data:", test);
 
         const editContainer = document.getElementById("edit-test-content"); // grabs the edit test content div
-        editContainer.innerHTML = ""; // clear previous content
-        // editContainer.innerHTML = "<p>Test loaded!</p>"; // debug thing
+        editContainer.innerHTML = ""; // clear previous content, add delete button
+
+        // Add delete button at the top once user loads specific test
+        const deleteBtn = document.createElement("button");
+        deleteBtn.id = "delete-button";
+        deleteBtn.textContent = "Delete";
+        editContainer.appendChild(deleteBtn);
+
+        deleteBtn.addEventListener("click", async function () { // delete button event listener
+            const confirmed = confirm("Are you sure you want to delete this test?");
+            if (!confirmed) return; // if the user says no, then nothing happens 
+
+            try { // if user says yes:
+                const res = await fetch(`/api/test/${testId}`, { // fetch the test with the given ID
+                    method: "DELETE" // attempt method delete
+                });
+
+                if (res.ok) { // if deleting worked:
+                    alert("Test deleted successfully!"); // alert user it did
+                    editContainer.innerHTML = ""; // clear the edit area
+                } else { // if it didn't work:
+                    alert("Failed to delete test."); // tell user it didn't
+                }
+            } catch (err) { // if an error occured:
+                console.error("Error deleting test:", err); // put in console the error received 
+                alert("An error occurred while deleting the test.", err); // tell user through alert it errored as well
+            }
+        });
+
+
+// Now render the rest of the test content below
+
         console.log("Edit container:", editContainer);
 
         console.log("Number of questions:", test.questions.length);
@@ -478,6 +529,8 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             questionDiv.style.padding = "10px";
             questionDiv.style.marginBottom = "10px";
             questionDiv.classList.add("question-block"); // adds a class to said div from above
+
+            // Add ionicon or something similar the user can click for deleting question. (This should be added the left of any element that would make sense for the user to be able to delete)
 
             // Question input
             const questionInput = document.createElement("input"); // creates an input tag for the question value

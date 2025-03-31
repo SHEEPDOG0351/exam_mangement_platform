@@ -21,6 +21,8 @@ class Test(db.Model):
     test_name = db.Column(db.String(255), nullable=False)
     teacher_fullname = db.Column(db.String(30), db.ForeignKey('teacher.teacher_fullname'))
     questions = db.relationship('Question', backref='test', cascade="all, delete-orphan")
+    test_scores = db.relationship('Student_Test_Scores', backref='test', cascade="all, delete-orphan", passive_deletes=True)
+
 
 class Question(db.Model):
     __tablename__ = 'question'
@@ -36,16 +38,35 @@ class Choice(db.Model):
     question_id = db.Column(db.Integer, db.ForeignKey('question.question_id'), nullable=False)
     choice_text = db.Column(db.Text, nullable=False)
     is_correct = db.Column(db.Boolean, default=False)
-
-
-
-
     
 class Student(db.Model):
     __tablename__ = 'student'
     student_fullname = db.Column(db.Text, primary_key=True)
     student_username = db.Column(db.Text, nullable=False)
     student_password = db.Column(db.Text, nullable=False) 
+
+class Student_Test_Scores(db.Model):
+    __tablename__ = 'student_test_scores'
+
+    student_username = db.Column(
+        db.Text,
+        db.ForeignKey('student.student_username'),
+        primary_key=True
+    )
+    
+    test_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('test.test_id', ondelete="CASCADE"),
+        primary_key=True
+    )
+
+    score = db.Column(db.Integer, nullable=False)
+
+    # relationships to access linked objects for querying data easier (as it limits errors)
+    # student = db.relationship('Student', backref='test_scores')
+    # back_populates = db.relationship('Test', backref='test_scores')
+
+
 
 # Routes
 @app.route('/')
@@ -145,5 +166,25 @@ def get_test(test_id):
         test_data["questions"].append(question_data)
 
     return jsonify(test_data)
+
+@app.route('/api/test/<int:test_id>', methods=['DELETE']) # method for deleting test in edit side of test management section
+def delete_test(test_id): # method for deleting the test using the given test_id from the user 
+    try: # try statements are used in cases of failure
+        test = db.session.get(Test, test_id) # pull the test we are going to delete
+
+        if not test: # if that test isn't found (which it should be because the delete button won't load without the test being found but I thought I would put this here regardless)
+            return jsonify({"error": "Test not found"}), 404
+
+        db.session.delete(test) # attempts to delete test
+        db.session.commit() # then commits that change to the database
+
+        return jsonify({"message": "Test deleted successfully"}), 200 # tell user the test was successfully deleted
+
+    except Exception as e: # if an error occured:
+        print(f"Error deleting test: {e}") # print to console what error stopped the system from deleting said test
+        db.session.rollback() # I don't know
+        return jsonify({"error": "Failed to delete test"}), 500 # return JSON object describing issue
+
+
 if __name__ == '__main__':
         app.run(debug=True)
