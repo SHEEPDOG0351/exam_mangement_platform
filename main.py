@@ -178,7 +178,8 @@ def create_test():
     questions_data = data.get("questions", []) # grabs the questions from the created tests stored in the JS's questions var, then stores them in the empty array here
 
     # Temporary teacher for demo (adjust this later to the logged-in teacher using session['teacher_id'])
-    teacher = Teacher.query.first() # i think this will use the MR.C value as it's the only value in the teachers table thus far for a teacher's name
+    teacher_fullname = data.get("teacher_fullname")
+    teacher = Teacher.query.filter_by(teacher_fullname=teacher_fullname).first()
 
     new_test = Test(test_name=test_name, teacher=teacher) # creates a var to store the test data for the teacher and test name column's
     db.session.add(new_test) # then adds the values from the line above to the session var
