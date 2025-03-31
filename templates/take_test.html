@@ -87,6 +87,7 @@
             <h1>Take Test Below</h1>
             <input type="text" name="Test ID" id="test-id-input" placeholder="Test ID">
             <button id="load-test-btn">Load Test</button>
+            <div id="test-container"></div>
             {% if test %}
                 <h2>{{ test.test_name }}</h2>
                 <form method="POST" action="/submit_test/{{ test.test_id }}">
@@ -124,15 +125,62 @@
       const testID = document.getElementById("test-id-input").value.trim();
       if (!testID) return alert("Please enter a test ID.");
 
-      const response = await fetch(`/api/test/${testID}`); // grabs the SQL data
-      const test = await response.json(); // makes the raw test properties from flask and puts it into a javascript object, for example, makes this possible: test.questions[0].question_text
+      const response = await fetch(`/api/test/${testID}`);
+      const test = await response.json();
       console.log("Loaded test data:", test);
 
-      test.questions.forEach((q, index) => {
-        
+      const container = document.getElementById("test-container");
+      container.innerHTML = ""; // Clear previous content
+
+      // Display test title
+      const title = document.createElement("h2");
+      title.textContent = test.test_name;
+      container.appendChild(title);
+
+      // Create form
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = `/submit_test/${test.test_id}`;
+
+      test.questions.forEach((question) => {
+        const questionDiv = document.createElement("div");
+        questionDiv.className = "question";
+
+        const qText = document.createElement("p");
+        qText.textContent = question.question_text;
+        questionDiv.appendChild(qText);
+
+        if (question.question_type === "short") {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.name = `q_${question.question_id}`;
+          questionDiv.appendChild(input);
+        } else if (question.question_type === "multiple") {
+          question.choices.forEach((choice) => {
+            const label = document.createElement("label");
+            const radio = document.createElement("input");
+            radio.type = "radio";
+            radio.name = `q_${question.question_id}`;
+            radio.value = choice.choice_id;
+            label.appendChild(radio);
+            label.append(` ${choice.choice_text}`);
+            questionDiv.appendChild(label);
+            questionDiv.appendChild(document.createElement("br"));
+          });
+        }
+
+        form.appendChild(questionDiv);
       });
 
-    });
+      // Add submit button
+      const submit = document.createElement("button");
+      submit.type = "submit";
+      submit.textContent = "Submit";
+      form.appendChild(submit);
+
+      container.appendChild(form);
+});
+
 </script>
 
 </html>
