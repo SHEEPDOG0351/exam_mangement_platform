@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Mangment</title>
+    <title>Test Management</title>
 </head>
 
 <style>
@@ -160,6 +160,14 @@
         font-size: 20px;
     }
 
+    .delete-icon {
+        font-size: 20px;
+        color: red;
+        cursor: pointer;
+        margin-left: 8px;
+        margin-right: 10px;
+    }
+    
 </style>
 
 <body>
@@ -490,7 +498,7 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 
         // Add delete button at the top once user loads specific test
         const deleteBtn = document.createElement("button");
-        deleteBtn.id = "delete-button";
+        deleteBtn.classList = "delete-btn";
         deleteBtn.textContent = "Delete";
         editContainer.appendChild(deleteBtn);
 
@@ -532,6 +540,11 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 
             // Add ionicon or something similar the user can click for deleting question. (This should be added the left of any element that would make sense for the user to be able to delete)
 
+            const deleteIcon = document.createElement("span");
+            deleteIcon.className = "delete-icon"
+            deleteIcon.title = "Delete"
+            deleteIcon.innerHTML = "&#x2716;"
+
             // Question input
             const questionInput = document.createElement("input"); // creates an input tag for the question value
             questionInput.type = "text"; // ------------------------>
@@ -557,8 +570,14 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             select.appendChild(shortOption); // --------->      I think adds the option tags to the parent select tag
             select.appendChild(multiOption); // ---------> 
 
-            questionDiv.appendChild(questionInput); // ----------->
-            questionDiv.appendChild(select); // ------------------>  I think it adds the input and select tags to the question block div
+            questionDiv.appendChild(deleteIcon); // -------------->
+            questionDiv.appendChild(questionInput); // ----------->     Adds the elements to the div
+            questionDiv.appendChild(select); // ------------------>  
+
+            deleteIcon.addEventListener("click", function() {
+                questionDiv.remove()
+            })
+
 
             // If multiple choice, show choices
             const choiceContainer = document.createElement("div"); // stores a div element
