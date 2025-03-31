@@ -133,10 +133,6 @@
         border: 2px lightgreen solid;
     }
 
-    /* .add-choice-btn {
-        display: none;
-    } */
-
     .multiple-choice-options {
         display: flex;
         flex-direction: column;
@@ -201,7 +197,7 @@
               <li><a href="{{ url_for('signup') }}">Signup</a></li>
               <li><a href="{{ url_for('login') }}">Login</a></li>
               <li><a href="{{ url_for('test_management') }}">Test Management</a></li>
-              <li><a href="{{ url_for('take_test') }}">Test</a></li>
+              <li><a href="{{ url_for('take_test') }}">Taking a Test</a></li>
             </ul>
           </div>
     </header>
@@ -392,7 +388,6 @@
                 <button class="correct-btn">Correct Choice</button>
             </div>
         `);
-
     }
 });
 });
