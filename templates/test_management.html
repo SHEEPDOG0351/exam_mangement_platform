@@ -102,6 +102,7 @@
 
     .question-block {
         margin: 0 auto;
+        padding-top: 10px;
     }
 
     .question-block input {
@@ -167,7 +168,17 @@
         margin-left: 8px;
         margin-right: 10px;
     }
-    
+
+    #apply-changes-button {
+        background-color: red;
+        color: white;
+        padding: 10px 50px;
+        border: 1px transparent solid;
+        border-radius: 5px;
+        font-size: 20px;
+        display: none;
+    }
+
 </style>
 
 <body>
@@ -239,6 +250,10 @@
                         <button type="button" id="load-test-btn">Load Test</button>
                     </div>
                 </form>
+            </div>
+            <div class="add-apply-buttons-div">
+                <button id="add-question-btn" style="margin-bottom: 10px;">Add Question</button>
+                <button id="apply-changes-button">Apply Changes</button>
             </div>
         </div>
     </div>
@@ -315,9 +330,10 @@
         choiceDiv.dataset.correct = "true"; // Mark's this choice as correct in the dataset
     } else if (event.target.classList.contains("add-question-btn")) {
         event.preventDefault();
+        console.log("add another choice button clicked!")
 
         // get last question block:
-        const questionBlocks = document.querySelectorAll(".question-block");
+        const questionBlocks = document.querySelectorAll("#edit-test-content .question-block");
         const lastQuestion = questionBlocks[questionBlocks.length - 1];
 
         // html we want to add
@@ -349,9 +365,15 @@
         const questionBlock = event.target.closest(".question-block");
         const container = questionBlock.querySelector(".multiple-choice-options");
 
+        const allQuestions = document.querySelectorAll(".question-block");
+        const index = Array.from(allQuestions).indexOf(questionBlock);
+
+        const questionIndex = [...document.querySelectorAll(".question-block")].indexOf(questionBlock);
+
         container.insertAdjacentHTML("beforeend", `
             <div class="choice">
                 <input type="text" name="choice[]" placeholder="Enter choice">
+                <input type="radio" name="correct_${questionIndex}" class="correct-radio">
                 <button class="correct-btn">Correct Choice</button>
             </div>
         `);
@@ -414,7 +436,7 @@ document.getElementById("test-form").addEventListener("submit", async function(e
     const questions = [];
 
     questionBlocks.forEach(block => {
-        const questionText = block.querySelector("input[name='question[]']").value;
+        const questionText = block.querySelector("input.editable-question").value;
         const questionType = block.querySelector("select.question-type").value;
 
         const questionData = {
@@ -486,6 +508,7 @@ document.getElementById("test-form").addEventListener("submit", async function(e
     });
 
     document.getElementById("load-test-btn").addEventListener("click", async function () { // when the button is pressed, the value in the ID input is grabbed. Also, this is the listener and what happens to the edit test body after the load test button is clicked
+        document.querySelector("#apply-changes-button").style.display = "block"
         const testId = document.getElementById("test-id-input").value.trim(); // this grabs the value, trims the space
         if (!testId) return alert("Please enter a test ID."); // if input was empty, alert is created
 
@@ -522,6 +545,32 @@ document.getElementById("test-form").addEventListener("submit", async function(e
                 alert("An error occurred while deleting the test.", err); // tell user through alert it errored as well
             }
         });
+
+        const add_question_btn = document.getElementById("add-question-btn")
+        add_question_btn.addEventListener("click", function () { // event listener for adding question button
+            console.log("add question button press detected!")
+            const div_to_add_code = document.getElementById("edit-test-content")
+            const questionIndex = document.querySelectorAll(".question-block").length;
+            const html = `<div class="question-block">
+                <input type="text" name="question[]" placeholder="Question" required>
+
+                <select class="question-type" name="question_type[]">
+                    <option value="short">Short Answer</option>
+                    <option value="multiple">Multiple Choice</option>
+                </select>
+
+                <div class="multiple-choice-options" style="display: none;">
+                    <div class="choice">
+                        <input type="text" name="choice[]" placeholder="Enter choice">
+                        <input type="radio" name="correct_${questionIndex}" class="correct-radio">
+                        <button class="correct-btn">Correct Choice</button>
+                    </div>
+                </div>
+                <button type="button" class="add-choice-btn">Add another choice</button>
+            </div>`;
+
+            div_to_add_code.insertAdjacentHTML("beforeend", html)
+        })
 
 
 // Now render the rest of the test content below
@@ -606,10 +655,79 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 
         questionDiv.appendChild(choiceContainer); // adds the choiceContainer div to the questionDiv
         editContainer.appendChild(questionDiv); // adds the questionDiv to the editContainer div
+
+    });
+
+    const applyChangesBtn = document.getElementById("apply-changes-button"); // apply changes button
+    applyChangesBtn.addEventListener("click", async function () { // the plan here is to delete original test, resubmit new, updated one
+
+        const confirmed = confirm("Are you sure you want to apply changes?");
+        if (!confirmed) return;
+
+        // First, delete the original test
+        const deleteRes = await fetch(`/api/test/${testId}`, { method: "DELETE" });
+        if (!deleteRes.ok) {
+            alert("Failed to delete original test before re-applying changes.");
+            return;
+        }
+
+        // Then, gather the edited content
+        const updatedQuestions = [];
+        const questionBlocks = document.querySelectorAll(".question-block");
+
+        questionBlocks.forEach((block, index) => {
+            const questionTextInput = block.querySelector("input.editable-question") || block.querySelector("input[name='question[]']");
+            if (!questionTextInput || questionTextInput.value.trim() === "") return;  // <== SKIP empty question blocks
+
+            const questionText = questionTextInput.value.trim();
+            const questionType = block.querySelector("select.question-type").value;
+
+            const questionData = {
+                question_text: questionText,
+                question_type: questionType,
+                choices: []
+            };
+
+            if (questionType === "multiple") {
+                const choices = block.querySelectorAll(".choice");
+
+                const choiceGroupName = `correct_${index}`;
+
+                choices.forEach(choice => {
+                    const choiceInput = choice.querySelector("input[type='text']");
+                    const radioInput = choice.querySelector("input[type='radio']");
+
+                    if (choiceInput && radioInput) {
+                        questionData.choices.push({
+                            choice_text: choiceInput.value,
+                            is_correct: radioInput.checked
+                        });
+                    }
+                });
+            }
+            updatedQuestions.push(questionData);
+        });
+
+
+        const updatedPayload = {
+            test_name: `Updated Test ${testId}`,  // optionally let the user edit this too
+            questions: updatedQuestions
+        };
+
+        console.log(updatedPayload)
+
+        // Send the updated version as a new test
+        const res = await fetch("/api/create_test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedPayload)
+        });
+
+        const result = await res.json();
+        console.log("Updated test saved:", result);
+        alert("Changes successfully applied!");
     });
 });
-
-
 
     async function loadTest(testId) {
             const response = await fetch(`/api/test/${testId}`);
