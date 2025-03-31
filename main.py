@@ -115,6 +115,14 @@ def login():
             return render_template('login.html', error=error)
     return render_template('login.html')
 
+@app.route('/test_db')
+def test_db_connection():
+    try:
+        result = db.session.execute('SELECT 1')
+        return "Database connection successful!", 200
+    except Exception as e:
+        return f"Error connecting to the database: {e}", 500
+
 @app.route('/Signup', methods = ['GET', 'POST'])
 def signup():
     if request.method == 'POST':
