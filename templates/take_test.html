@@ -78,17 +78,61 @@
               <li><a href="{{ url_for('signup') }}">Signup</a></li>
               <li><a href="{{ url_for('login') }}">Login</a></li>
               <li><a href="{{ url_for('test_management') }}">Test Mangment</a></li>
-              <li><a href="{{ url_for('take_test') }}">Taking a Test</a></li>
+              <li><a href="{{ url_for('take_test_selector') }}">Taking a Test</a></li>
             </ul>
           </div>
       </header>
     <div class="div-body">
         <div class="div-body-content">
             <h1>Take Test Below</h1>
-            
-            {% block body %}
-            {% endblock %}
+            <input type="text" name="Test ID" id="test-id-input" placeholder="Test ID">
+            <button id="load-test-btn">Load Test</button>
+            {% if test %}
+                <h2>{{ test.test_name }}</h2>
+                <form method="POST" action="/submit_test/{{ test.test_id }}">
+                    {% for question in test.questions %}
+                        <div class="question">
+                            <p>{{ question.question_text }}</p>
+                            
+                            {% if question.question_type == 'short' %}
+                                <input type="text" name="q_{{ question.question_id }}">
+                            {% elif question.question_type == 'multiple' %}
+                                {% for choice in question.choices %}
+                                    <label>
+                                        <input type="radio" name="q_{{ question.question_id }}" value="{{ choice.choice_id }}">
+                                        {{ choice.choice_text }}
+                                    </label><br>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit">Submit</button>
+                </form>
+            {% endif %}
         </div>
     </div>
 </body>
+
+<script>
+    document.getElementById("test-id-input").addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        document.getElementById("load-test-btn").click(); // simulate click on load test button
+      }
+    })
+
+    document.getElementById("load-test-btn").addEventListener("click", async function () {
+      const testID = document.getElementById("test-id-input").value.trim();
+      if (!testID) return alert("Please enter a test ID.");
+
+      const response = await fetch(`/api/test/${testID}`); // grabs the SQL data
+      const test = await response.json(); // makes the raw test properties from flask and puts it into a javascript object, for example, makes this possible: test.questions[0].question_text
+      console.log("Loaded test data:", test);
+
+      test.questions.forEach((q, index) => {
+        
+      });
+
+    });
+</script>
+
 </html>

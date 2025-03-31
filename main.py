@@ -141,8 +141,15 @@ def signup():
     return render_template('signup.html')
 
 @app.route('/take_test')
-def take_test():
+def take_test_selector():
     return render_template('take_test.html')
+
+
+@app.route('/take_test/<int:test_id>')
+def take_test(test_id):
+    test = Test.query.get_or_404(test_id)
+    return render_template('take_test.html', test=test)
+
 
 @app.route('/test_management')
 def test_management():
