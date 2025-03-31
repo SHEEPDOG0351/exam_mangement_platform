@@ -181,6 +181,15 @@ def create_test():
     teacher_fullname = data.get("teacher_fullname")
     teacher = Teacher.query.filter_by(teacher_fullname=teacher_fullname).first()
 
+    if not teacher:
+        teacher = Teacher(
+            teacher_fullname=teacher_fullname,
+            teacher_username=teacher_fullname.lower().replace(" ", "_"),
+            teacher_password="defaultpass"  # You can change this logic
+        )
+        db.session.add(teacher)
+        db.session.flush()  # Add it without committing yet
+        
     new_test = Test(test_name=test_name, teacher=teacher) # creates a var to store the test data for the teacher and test name column's
     db.session.add(new_test) # then adds the values from the line above to the session var
     db.session.flush()  # Get new_test.test_id before commit
