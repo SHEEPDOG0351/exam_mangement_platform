@@ -122,6 +122,9 @@
     })
 
     document.getElementById("load-test-btn").addEventListener("click", async function () {
+      document.getElementById("test-id-input").style.display = "none"
+      document.getElementById("load-test-btn").style.display = "none"
+
       const testID = document.getElementById("test-id-input").value.trim();
       if (!testID) return alert("Please enter a test ID.");
 
@@ -176,10 +179,14 @@
       const submit = document.createElement("button");
       submit.type = "submit";
       submit.textContent = "Submit";
+      submit.id = "submit-btn"
       form.appendChild(submit);
-
       container.appendChild(form);
 });
+
+document.getElementById("submit-btn").addEventListener("click", function() {
+  
+})
 
 </script>
 
