@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, flash, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -86,12 +86,81 @@ def account():
 
     return render_template('accounts.html', accounts=accounts, selected_type=account_type)
 
-@app.route('/Login')
+@app.route('/Login', methods = ['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        account_type = request.form.get('account_type')  
+        if not username or not password:
+            flash("Username and password are required", "danger")
+            return render_template('login.html')
+
+        if account_type == 'student':
+            student = Student.query.filter_by(student_username=username).first()
+            if student and student.student_password == password:
+                flash("Login successful", "success")
+                return render_template('index.html')
+            else:
+                flash("Invalid username or password for student", "danger")
+        
+        elif account_type == 'teacher':
+            teacher = Teacher.query.filter_by(teacher_username=username).first()
+            if teacher and teacher.teacher_password == password:
+                flash("Login successful", "success")
+                return render_template('index.html')
+            else:
+                flash("Invalid username or password for teacher", "danger")
+
+        else:
+            flash("Invalid account type selected", "danger")
     return render_template('login.html')
 
-@app.route('/Signup')
+@app.route('/Signup', methods = ['GET', 'POST'])
 def signup():
+    if request.method == 'POST':
+        account_type = request.form['account_type']
+        fullname = request.form['fullname']
+        username = request.form['username']
+        password = request.form['password']
+        if not fullname or not username or not password:
+            flash("All fields are required", "danger")
+            return render_template(signup.html)
+
+        if account_type == 'student':
+            existing_student = Student.query.filter_by(student_username=username).first()
+            if existing_student:
+                flash("Username already exists for a student", "danger")
+                return render_template(signup.html)
+
+            new_student = Student(
+                student_fullname=fullname,
+                student_username=username,
+            )
+            db.session.add(new_student)
+            db.session.commit()
+            flash("Student account created successfully", "success")
+            return render_template(login.html)
+
+        elif account_type == 'teacher':
+            existing_teacher = Teacher.query.filter_by(teacher_username=username).first()
+            if existing_teacher:
+                flash("Username already exists for a teacher", "danger")
+                return render_template(signup.html)
+
+            new_teacher = Teacher(
+                teacher_fullname=fullname,
+                teacher_username=username,
+            )
+            db.session.add(new_teacher)
+            db.session.commit()
+            flash("Teacher account created successfully", "success")
+            return render_template(login.html)
+
+        flash("Invalid account type selected", "danger")
+        return render_template(signup.html)
+
+
     return render_template('signup.html')
 
 @app.route('/take_test')

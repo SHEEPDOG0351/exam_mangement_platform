@@ -132,5 +132,16 @@
             <button>Login</button>
         </div>
     </div>
+    {% block body %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
+    {% endblock %}
 </body>
 </html>
