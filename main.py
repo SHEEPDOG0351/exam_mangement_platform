@@ -6,7 +6,7 @@ app = Flask(__name__)
 # Setup MySQL connection for Flask-SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:cset155@localhost/exam_management_2"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.config['SECRET_KEY'] = 'matthew'
 db = SQLAlchemy(app)
 
 # SQLAlchemy Models
@@ -97,18 +97,20 @@ def login():
             return render_template('login.html')
 
         if account_type == 'student':
+            
             student = Student.query.filter_by(student_username=username).first()
             if student and student.student_password == password:
                 flash("Login successful", "success")
-                return render_template('index.html')
+                return render_template('index.html')  
             else:
                 flash("Invalid username or password for student", "danger")
         
         elif account_type == 'teacher':
+
             teacher = Teacher.query.filter_by(teacher_username=username).first()
             if teacher and teacher.teacher_password == password:
                 flash("Login successful", "success")
-                return render_template('index.html')
+                return render_template('index.html')  
             else:
                 flash("Invalid username or password for teacher", "danger")
 
@@ -123,43 +125,21 @@ def signup():
         fullname = request.form['fullname']
         username = request.form['username']
         password = request.form['password']
+
         if not fullname or not username or not password:
-            flash("All fields are required", "danger")
-            return render_template(signup.html)
+            return render_template('signup.html', error="All fields are required")
 
-        if account_type == 'student':
-            existing_student = Student.query.filter_by(student_username=username).first()
-            if existing_student:
-                flash("Username already exists for a student", "danger")
-                return render_template(signup.html)
-
-            new_student = Student(
-                student_fullname=fullname,
-                student_username=username,
-            )
-            db.session.add(new_student)
-            db.session.commit()
-            flash("Student account created successfully", "success")
-            return render_template(login.html)
-
-        elif account_type == 'teacher':
-            existing_teacher = Teacher.query.filter_by(teacher_username=username).first()
-            if existing_teacher:
-                flash("Username already exists for a teacher", "danger")
-                return render_template(signup.html)
-
-            new_teacher = Teacher(
-                teacher_fullname=fullname,
-                teacher_username=username,
-            )
-            db.session.add(new_teacher)
-            db.session.commit()
-            flash("Teacher account created successfully", "success")
-            return render_template(login.html)
-
-        flash("Invalid account type selected", "danger")
-        return render_template(signup.html)
-
+        if account_type == 'teacher':
+            if Teacher.query.filter_by(teacher_username=username).first():
+                return render_template('signup.html', error="Teacher username already exists")
+            new_user = Teacher(teacher_fullname=fullname, teacher_username=username, teacher_password=password)
+        elif account_type == 'student':
+            if Student.query.filter_by(student_username=username).first():
+                return render_template('signup.html', error="Student username already exists")
+            new_user = Student(student_fullname=fullname, student_username=username, student_password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect('/Login')
 
     return render_template('signup.html')
 
