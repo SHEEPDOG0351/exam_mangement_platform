@@ -239,6 +239,16 @@ document.addEventListener("click", async function (e) {
     console.log("Collected Question Data:", allQuestions);
     // Here, you can send `allQuestions` via fetch() to an endpoint like /submit_answers
 
+    // Check if the student has already submitted this test
+    const checkResponse = await fetch(`/api/check_submission?student_fullname=${encodeURIComponent(studentFullname)}&test_id=${window.currentTest.test_id}`);
+    const checkResult = await checkResponse.json();
+
+    if (checkResult.alreadySubmitted) {
+      alert("You have already submitted this test. Duplicate submissions are not allowed.");
+      return;
+    }
+
+
     await fetch("/api/submit_answers", {
       method: "POST",
       headers: {
