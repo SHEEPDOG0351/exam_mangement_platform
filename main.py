@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, jsonify, flash, redirect, session
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import text
+from sqlalchemy import text, create_engine, text
+conn_str = "mysql://root:cset155@localhost/exam_management_2"
+engine = create_engine(conn_str, echo = True)
+conn = engine.connect()
 
 
 app = Flask(__name__)
@@ -78,12 +81,11 @@ def index():
 def account():
     account_type = request.args.get('type')
     accounts = []
-    if account_type == ' student':
-        account = Student.query.all()
-    elif account_type == ' teacher':
-        account = Teacher.query.all()
-    else:
-        account = Student.query.all() + Teacher.query.all()
+    if account_type == ' teacher':
+        teachers = conn.execute(text('select * from teacher')).all()
+        student = conn.execute(text('select * from student')).all()
+
+   
 
     return render_template('accounts.html', accounts=accounts, selected_type=account_type)
 
@@ -106,7 +108,7 @@ def login():
                 session['fullname'] = fullname
                 session['username'] = username
                 session['account_type'] = account_type
-                return render_template('index.html')
+                return render_template('take_test.html')
             else:
                 error = "Invalid username, full name, or password for student"
                 return render_template('login.html', error=error)
@@ -115,7 +117,7 @@ def login():
             if teacher and teacher.teacher_password == password:
                 session['username'] = username
                 session['account_type'] = account_type
-                return render_template('index.html')  
+                return render_template('accounts.html')  
             else:
                 error = "Invalid username, full name, or password for teacher"
                 return render_template('login.html', error=error)
