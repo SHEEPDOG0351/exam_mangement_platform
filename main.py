@@ -77,7 +77,7 @@ class Student_Test_Scores(db.Model):
 def index():
     return render_template('index.html')
 
-@app.route('/Account', methods = ['GET', 'POST'])
+@app.route('/account', methods = ['GET', 'POST'])
 def account():
     account_type = request.args.get('type')
     accounts = []
@@ -102,6 +102,7 @@ def login():
         if not username or not password or not fullname:
             error = "All fields (Full Name, Username, and Password) are required"
             return render_template('login.html', error=error)
+
         if account_type == 'student':
             student = Student.query.filter_by(student_username=username, student_fullname=fullname).first()
             if student and student.student_password == password:
@@ -112,19 +113,19 @@ def login():
             else:
                 error = "Invalid username, full name, or password for student"
                 return render_template('login.html', error=error)
+
         elif account_type == 'teacher':
             teacher = Teacher.query.filter_by(teacher_username=username, teacher_fullname=fullname).first()
             if teacher and teacher.teacher_password == password:
                 session['username'] = username
                 session['account_type'] = account_type
-                return render_template('accounts.html')  
+                return render_template('account.html', type='both')  
             else:
                 error = "Invalid username, full name, or password for teacher"
                 return render_template('login.html', error=error)
         else:
             error = "Invalid account type selected"
             return render_template('login.html', error=error)
-        
     return render_template('login.html')
 
 @app.route('/test_db')
