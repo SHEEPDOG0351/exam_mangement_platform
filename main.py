@@ -275,6 +275,7 @@ def submit_answers():
 
         test_id = data.get("test_id")
         answers = data.get("answers", [])
+        submission_id = data.get("submission_id")
 
         for q in answers:
             question_text = q["question_text"]
@@ -288,17 +289,34 @@ def submit_answers():
             if question_type == "short":
                 short_answer = q.get("short_answer", "")
                 db.session.execute(
-                    text("INSERT INTO student_answers (student_fullname, question_id, short_answer_text) VALUES (:s, :q, :a)"),
-                    {"s": student_fullname, "q": question.question_id, "a": short_answer}
+                    text("INSERT INTO student_answers (submission_id, student_fullname, test_id, question_id, short_answer_text) VALUES (:id, :name, :test, :qid, :answer)"),
+                    {
+                        "id": submission_id,
+                        "name": student_fullname,
+                        "test": test_id,
+                        "qid": question.question_id,
+                        "answer": short_answer
+                    }
                 )
 
+
             elif question_type == "multiple":
-                selected_choice = next((c for c in q["choices"] if c["selected"]), None)
+                choices = q.get("choices", [])
+                selected_choice = next((c for c in choices if c.get("selected")), None)
+
                 if selected_choice:
                     db.session.execute(
-                        text("INSERT INTO student_answers (student_fullname, question_id, selected_choice_id) VALUES (:s, :q, :c)"),
-                        {"s": student_fullname, "q": question.question_id, "c": selected_choice["choice_id"]}
+                        text("INSERT INTO student_answers (submission_id, student_fullname, test_id, question_id, selected_choice_id) VALUES (:id, :name, :test, :qid, :cid)"),
+                        {
+                            "id": submission_id,
+                            "name": student_fullname,
+                            "test": test_id,
+                            "qid": question.question_id,
+                            "cid": selected_choice["choice_id"]
+                        }
                     )
+
+
 
         db.session.commit()
         return jsonify({"message": "Answers submitted successfully!"}), 200
