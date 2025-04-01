@@ -5,7 +5,6 @@ conn_str = "mysql://root:cset155@localhost/exam_management_2"
 engine = create_engine(conn_str, echo = True)
 conn = engine.connect()
 
-
 app = Flask(__name__)
 
 # Setup MySQL connection for Flask-SQLAlchemy
@@ -69,8 +68,6 @@ class Student_Test_Scores(db.Model):
     # relationships to access linked objects for querying data easier (as it limits errors)
     # student = db.relationship('Student', backref='test_scores')
     # back_populates = db.relationship('Test', backref='test_scores')
-
-
 
 # Routes
 @app.route('/')
@@ -279,7 +276,6 @@ def check_submission():
 
     return jsonify({"alreadySubmitted": result is not None})
 
-
 @app.route('/api/submit_answers', methods=['POST'])
 def submit_answers():
     try:
@@ -312,7 +308,6 @@ def submit_answers():
                     }
                 )
 
-
             elif question_type == "multiple":
                 choices = q.get("choices", [])
                 selected_choice = next((c for c in choices if c.get("selected")), None)
@@ -328,9 +323,6 @@ def submit_answers():
                             "cid": selected_choice["choice_id"]
                         }
                     )
-
-
-
         db.session.commit()
         return jsonify({"message": "Answers submitted successfully!"}), 200
 
