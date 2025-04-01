@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, jsonify, flash, redirect
+from flask import Flask, render_template, request, jsonify, flash, redirect, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+
 
 app = Flask(__name__)
 
@@ -87,6 +89,8 @@ def account():
 
 @app.route('/Login', methods = ['GET', 'POST'])
 def login():
+    app.secret_key = "your-secret-key"
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -99,6 +103,9 @@ def login():
         if account_type == 'student':
             student = Student.query.filter_by(student_username=username, student_fullname=fullname).first()
             if student and student.student_password == password:
+                session['fullname'] = fullname
+                session['username'] = username
+                session['account_type'] = account_type
                 return render_template('index.html')
             else:
                 error = "Invalid username, full name, or password for student"
@@ -106,6 +113,8 @@ def login():
         elif account_type == 'teacher':
             teacher = Teacher.query.filter_by(teacher_username=username, teacher_fullname=fullname).first()
             if teacher and teacher.teacher_password == password:
+                session['username'] = username
+                session['account_type'] = account_type
                 return render_template('index.html')  
             else:
                 error = "Invalid username, full name, or password for teacher"
@@ -113,6 +122,7 @@ def login():
         else:
             error = "Invalid account type selected"
             return render_template('login.html', error=error)
+        
     return render_template('login.html')
 
 @app.route('/test_db')
@@ -150,13 +160,12 @@ def signup():
 
 @app.route('/take_test')
 def take_test_selector():
-    return render_template('take_test.html')
-
+    return render_template('take_test.html', student_fullname=session.get("fullname"))
 
 @app.route('/take_test/<int:test_id>')
 def take_test(test_id):
     test = Test.query.get_or_404(test_id)
-    return render_template('take_test.html', test=test)
+    return render_template('take_test.html', test=test, student_fullname=session.get("fullname"))
 
 
 @app.route('/test_management')
@@ -255,6 +264,47 @@ def delete_test(test_id): # method for deleting the test using the given test_id
         print(f"Error deleting test: {e}") # print to console what error stopped the system from deleting said test
         db.session.rollback() # I don't know
         return jsonify({"error": "Failed to delete test"}), 500 # return JSON object describing issue
+
+@app.route('/api/submit_answers', methods=['POST'])
+def submit_answers():
+    try:
+        data = request.get_json()
+        student_fullname = data.get("student_fullname")
+
+        test_id = data.get("test_id")
+        answers = data.get("answers", [])
+
+        for q in answers:
+            question_text = q["question_text"]
+            question_type = q["question_type"]
+
+            question = Question.query.filter_by(test_id=test_id, question_text=question_text).first()
+            if not question:
+                print(f"Question not found for: {question_text}")
+                continue
+
+            if question_type == "short":
+                short_answer = q.get("short_answer", "")
+                db.session.execute(
+                    text("INSERT INTO student_answers (student_fullname, question_id, short_answer_text) VALUES (:s, :q, :a)"),
+                    {"s": student_fullname, "q": question.question_id, "a": short_answer}
+                )
+
+            elif question_type == "multiple":
+                selected_choice = next((c for c in q["choices"] if c["selected"]), None)
+                if selected_choice:
+                    db.session.execute(
+                        text("INSERT INTO student_answers (student_fullname, question_id, selected_choice_id) VALUES (:s, :q, :c)"),
+                        {"s": student_fullname, "q": question.question_id, "c": selected_choice["choice_id"]}
+                    )
+
+        db.session.commit()
+        return jsonify({"message": "Answers submitted successfully!"}), 200
+
+    except Exception as e:
+        print("❌ Error submitting answers:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':
