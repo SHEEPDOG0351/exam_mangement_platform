@@ -266,6 +266,19 @@ def delete_test(test_id): # method for deleting the test using the given test_id
         print(f"Error deleting test: {e}") # print to console what error stopped the system from deleting said test
         db.session.rollback() # I don't know
         return jsonify({"error": "Failed to delete test"}), 500 # return JSON object describing issue
+    
+@app.route("/api/check_submission")
+def check_submission():
+    student_fullname = request.args.get("student_fullname")
+    test_id = request.args.get("test_id")
+
+    result = db.session.execute(
+        text("SELECT 1 FROM student_answers WHERE student_fullname = :name AND test_id = :tid LIMIT 1"),
+        {"name": student_fullname, "tid": test_id}
+    ).fetchone()
+
+    return jsonify({"alreadySubmitted": result is not None})
+
 
 @app.route('/api/submit_answers', methods=['POST'])
 def submit_answers():
@@ -322,9 +335,8 @@ def submit_answers():
         return jsonify({"message": "Answers submitted successfully!"}), 200
 
     except Exception as e:
-        print("❌ Error submitting answers:", e)
+        print("Error submitting answers:", e)
         return jsonify({"error": str(e)}), 500
-
 
 
 if __name__ == '__main__':
