@@ -89,6 +89,7 @@
             <button id="load-test-btn">Load Test</button>
             <div id="test-container"></div>
             {% if test %}
+            <input type="text" name="student-name" id="student-name-input" placeholder="Your First and Last Name">
                 <h2>{{ test.test_name }}</h2>
                 <form method="POST" action="/submit_test/{{ test.test_id }}">
                     {% for question in test.questions %}
@@ -115,6 +116,7 @@
 </body>
 
 <script>
+  const studentFullname = "{{ student_fullname }}"; // needed later for transfer of data
     document.getElementById("test-id-input").addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
         document.getElementById("load-test-btn").click(); // simulate click on load test button
@@ -122,27 +124,29 @@
     })
 
     document.getElementById("load-test-btn").addEventListener("click", async function () {
+      document.getElementById("test-id-input").style.display = "none"
+      document.getElementById("load-test-btn").style.display = "none"
+
       const testID = document.getElementById("test-id-input").value.trim();
       if (!testID) return alert("Please enter a test ID.");
 
       const response = await fetch(`/api/test/${testID}`);
-      const test = await response.json();
-      console.log("Loaded test data:", test);
+      window.currentTest = await response.json();
 
       const container = document.getElementById("test-container");
       container.innerHTML = ""; // Clear previous content
 
       // Display test title
       const title = document.createElement("h2");
-      title.textContent = test.test_name;
+      title.textContent = window.currentTest.test_name;
       container.appendChild(title);
 
       // Create form
       const form = document.createElement("form");
       form.method = "POST";
-      form.action = `/submit_test/${test.test_id}`;
+      form.action = `/submit_test/${window.currentTest.test_id}`;
 
-      test.questions.forEach((question) => {
+      window.currentTest.questions.forEach((question) => {
         const questionDiv = document.createElement("div");
         questionDiv.className = "question";
 
@@ -176,10 +180,67 @@
       const submit = document.createElement("button");
       submit.type = "submit";
       submit.textContent = "Submit";
+      submit.id = "submit-btn"
       form.appendChild(submit);
-
       container.appendChild(form);
 });
+
+document.addEventListener("click", async function (e) {
+  if (e.target && e.target.id === "submit-btn") {
+    e.preventDefault(); // stop actual form submission if you're handling it manually
+
+    const allQuestions = []; // hold all questions eventually
+
+    document.querySelectorAll(".question").forEach((block) => { // loop through each question
+      const questionText = block.querySelector("p")?.textContent || ""; // grabs the p tag and uses it as title, if there's no value, then instead of throwing null, it'll just be empty
+
+      // MULTIPLE CHOICE
+      if (block.querySelector("label")) { // if there's a label, it must be multiple choice
+        const choices = []; // holds question's multiple choices
+        block.querySelectorAll("label").forEach((label) => { // loops through each label within the question (as block holds the current question block)
+          const radio = label.querySelector("input[type='radio']"); // grab the questions radio
+          choices.push({ // holds data on each choice
+            choice_id: radio.value, // the choice's ID
+            choice_text: label.textContent.trim(), // the text for that choice
+            selected: radio.checked // TRUE if the user selected this option, otherwise FALSE
+          });
+        });
+
+        allQuestions.push({ // Now push this whole question's data into `allQuestions` array
+          question_type: "multiple", // questions type (multiple vs short)
+          question_text: questionText, // the questions title
+          choices: choices // the question's multiple choices and the values within each choice
+        });
+      }
+
+      // SHORT ANSWER
+      else { // didn't have a label, thus short answer
+        const input = block.querySelector("input[type='text']"); // grab the input tag the user typed answer in
+        allQuestions.push({ // pushes all of the following data into the `allQuestions` array
+          question_type: "short", // short answer type
+          question_text: questionText, // questions title
+          short_answer: input.value // the short answer the student gave
+        });
+      }
+    });
+
+    console.log("Collected Question Data:", allQuestions);
+    // Here, you can send `allQuestions` via fetch() to an endpoint like /submit_answers
+
+    await fetch("/api/submit_answers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        student_fullname: studentFullname,
+        test_id: window.currentTest.test_id,
+        answers: allQuestions
+      })
+    });
+  }
+});
+
 
 </script>
 
