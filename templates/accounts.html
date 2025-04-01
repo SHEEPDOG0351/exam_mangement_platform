@@ -87,19 +87,37 @@
         <div class="div-body-content">
             <h1>Accounts</h1>
             {% block body %}
-            {% for teachers in teacher %}
+            {% if selected_type == 'both' %}
+            <h2>Teachers and Students</h2>
+            <h3>Teachers</h3>
             <ul>
-                 <li>{{teacher[0]}}</li>
-                 <li></li>
-                 <li></li>
-                 <li></li>
-                 <li></li>
+                {% for teacher in accounts %}
+                    <li>{{ teacher.teacher_fullname }} - {{ teacher.teacher_username }}</li>
+                {% endfor %}
             </ul>
-     
-     
-     
-     
-         {% endfor %}
+            <h3>Students</h3>
+            <ul>
+                {% for student in accounts %}
+                    <li>{{ student.student_fullname }} - {{ student.student_username }}</li>
+                {% endfor %}
+            </ul>
+        {% elif selected_type == 'teacher' %}
+            <h2>Teachers</h2>
+            <ul>
+                {% for teacher in accounts %}
+                    <li>{{ teacher.teacher_fullname }} - {{ teacher.teacher_username }}</li>
+                {% endfor %}
+            </ul>
+        {% elif selected_type == 'student' %}
+            <h2>Students</h2>
+            <ul>
+                {% for student in accounts %}
+                    <li>{{ student.student_fullname }} - {{ student.student_username }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No accounts found.</p>
+        {% endif %}
      
             {% endblock %}
         </div>
