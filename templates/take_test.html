@@ -85,11 +85,11 @@
     <div class="div-body">
         <div class="div-body-content">
             <h1>Take Test Below</h1>
+            <input type="text" name="" id="fullName-input" placeholder="Your First and Last Name">
             <input type="text" name="Test ID" id="test-id-input" placeholder="Test ID">
             <button id="load-test-btn">Load Test</button>
             <div id="test-container"></div>
             {% if test %}
-            <input type="text" name="student-name" id="student-name-input" placeholder="Your First and Last Name">
                 <h2>{{ test.test_name }}</h2>
                 <form method="POST" action="/submit_test/{{ test.test_id }}">
                     {% for question in test.questions %}
@@ -116,7 +116,7 @@
 </body>
 
 <script>
-  const studentFullname = "{{ student_fullname }}"; // needed later for transfer of data
+  const submissionId = crypto.randomUUID(); // Used to ensure each test returns one submission_id so the teacher differentiate between each students submission
     document.getElementById("test-id-input").addEventListener("keydown", function (event) {
       if (event.key === "Enter") {
         document.getElementById("load-test-btn").click(); // simulate click on load test button
@@ -126,6 +126,7 @@
     document.getElementById("load-test-btn").addEventListener("click", async function () {
       document.getElementById("test-id-input").style.display = "none"
       document.getElementById("load-test-btn").style.display = "none"
+      document.getElementById("fullName-input").style.display = "none"
 
       const testID = document.getElementById("test-id-input").value.trim();
       if (!testID) return alert("Please enter a test ID.");
@@ -195,34 +196,45 @@ document.addEventListener("click", async function (e) {
       const questionText = block.querySelector("p")?.textContent || ""; // grabs the p tag and uses it as title, if there's no value, then instead of throwing null, it'll just be empty
 
       // MULTIPLE CHOICE
-      if (block.querySelector("label")) { // if there's a label, it must be multiple choice
-        const choices = []; // holds question's multiple choices
-        block.querySelectorAll("label").forEach((label) => { // loops through each label within the question (as block holds the current question block)
-          const radio = label.querySelector("input[type='radio']"); // grab the questions radio
-          choices.push({ // holds data on each choice
-            choice_id: radio.value, // the choice's ID
-            choice_text: label.textContent.trim(), // the text for that choice
-            selected: radio.checked // TRUE if the user selected this option, otherwise FALSE
+      if (block.querySelector("label")) {
+        const choices = [];
+        block.querySelectorAll("label").forEach((label) => {
+          const radio = label.querySelector("input[type='radio']");
+          choices.push({
+            choice_id: radio.value,
+            choice_text: label.textContent.trim(),
+            selected: radio.checked
           });
         });
 
-        allQuestions.push({ // Now push this whole question's data into `allQuestions` array
-          question_type: "multiple", // questions type (multiple vs short)
-          question_text: questionText, // the questions title
-          choices: choices // the question's multiple choices and the values within each choice
+        // ✅ Fix: safely grab the first radio button's name to extract question ID
+        const radio = block.querySelector("input[type='radio']");
+        const questionId = radio.name.split("_")[1];
+
+        allQuestions.push({
+          submission_id: submissionId,
+          question_type: "multiple",
+          question_id: questionId,
+          question_text: questionText,
+          choices: choices
         });
       }
+
 
       // SHORT ANSWER
       else { // didn't have a label, thus short answer
         const input = block.querySelector("input[type='text']"); // grab the input tag the user typed answer in
-        allQuestions.push({ // pushes all of the following data into the `allQuestions` array
-          question_type: "short", // short answer type
-          question_text: questionText, // questions title
-          short_answer: input.value // the short answer the student gave
+        allQuestions.push({
+          submission_id: submissionId,
+          question_type: "short",
+          question_id: input.name.split("_")[1], // grab ID from input name like "q_101"
+          question_text: questionText,
+          short_answer: input.value
         });
       }
     });
+
+    const studentFullname = document.getElementById("fullName-input").value; // needed for retrieving the full name typed into input tag
 
     console.log("Collected Question Data:", allQuestions);
     // Here, you can send `allQuestions` via fetch() to an endpoint like /submit_answers
@@ -233,6 +245,7 @@ document.addEventListener("click", async function (e) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
+        submission_id: submissionId,
         student_fullname: studentFullname,
         test_id: window.currentTest.test_id,
         answers: allQuestions
@@ -240,8 +253,5 @@ document.addEventListener("click", async function (e) {
     });
   }
 });
-
-
 </script>
-
 </html>
