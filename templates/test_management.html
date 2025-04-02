@@ -183,6 +183,17 @@
         display: none;
     }
 
+    .view-body {
+        display: none;
+        flex-direction: column;
+    }
+
+    .view-body-content {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
 </style>
 
 <body>
@@ -210,6 +221,8 @@
                 <button>Create</button>
 
                 <button>Edit</button>
+
+                <button>View</button>
             </div>
 
             <div class="create-test-body">
@@ -262,6 +275,14 @@
                 <button id="add-question-btn" style="margin-bottom: 10px;">Add Question</button>
                 <button id="apply-changes-button">Apply Changes</button>
             </div>
+
+            <div class="view-body">
+                <h2 style="text-align: center;">View Test Below</h2>
+                <div class="view-body-content">
+                    <input type="text" name="test ID" id="view-test-input" placeholder="Test ID">
+                    <button id="view-load-test-btn">Load Test</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
@@ -272,6 +293,7 @@
 
     const create_button = document.querySelectorAll(".button-content button")[0];
     const edit_button = document.querySelectorAll(".button-content button")[1];
+    const view_button = document.querySelectorAll(".button-content button")[2]
 
     create_button.addEventListener("click", function() {
 
@@ -279,17 +301,26 @@
         document.querySelector(".edit-test-body").style.display = "none";
 
         // Second, show the content within the create test body
-        document.querySelector(".create-test-body").style.display = "flex"
+        document.querySelector(".create-test-body").style.display = "flex";
+        document.querySelector(".add-apply-buttons-div").style.display = "flex"
     });
 
     edit_button.addEventListener("click", function() {
 
         // First, ensure the create test body is hidden
-        document.querySelector(".create-test-body").style.display = "none"
+        document.querySelector(".create-test-body").style.display = "none";
 
         // Second, display the edit test body
         document.querySelector(".edit-test-body").style.display = "flex";
+        document.querySelector(".add-apply-buttons-div").style.display = "flex"
     });
+
+    view_button.addEventListener("click", function() {
+        document.querySelector(".edit-test-body").style.display = "none";
+        document.querySelector(".create-test-body").style.display = "none";
+        document.querySelector(".view-body").style.display = "flex";
+        document.querySelector(".add-apply-buttons-div").style.display = "none"
+    })
 
     // -------------------------------------------------- Create Test functionality below -----------------------------------------------------
 
@@ -751,5 +782,76 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             // Now you can assign it to variables or populate the page
         }
 
+// ---------------------------------------------------------------------------- View Section -----------------------------------------------------------------------
+
+    const viewIDInput = document.getElementById("view-test-input")
+    viewIDInput.addEventListener("keydown", function (event) { // checks for if the user presses enter in the Test ID input mentioned above
+        if (event.key === "Enter") {
+            event.preventDefault(); // prevent form submission/refresh
+            document.getElementById("view-load-test-btn").click(); // simulate a click on the Load Test button
+        }
+    });
+
+    const viewLoadTestsButton = document.getElementById("view-load-test-btn")
+    viewLoadTestsButton.addEventListener("click", async function() {
+        const testID = viewIDInput.value // grabs test id used to pull test from database
+        const response = await fetch(`/api/test/${testID}`); // grabs the SQL data
+        const test = await response.json();
+        // Create and show teacher's name
+        const teacherName = document.createElement("h3");
+        teacherName.style.textAlign = "center";
+        teacherName.textContent = `Teacher: ${test.teacher_fullname}`;
+        const viewContainer = document.querySelector(".view-body-content");
+        viewContainer.innerHTML = "";
+        viewContainer.appendChild(teacherName);
+
+        // Create and show student count
+        const studentCount = document.createElement("h4");
+        studentCount.style.textAlign = "center";
+        studentCount.textContent = `Students who took this test: ${test.student_count}`;
+        viewContainer.appendChild(studentCount);
+
+        console.log(test)
+
+        const questionTitle = document.createElement("h2");
+        questionTitle.style.textAlign = "center";
+
+        questionTitle.textContent = test.test_name;
+        viewContainer.appendChild(questionTitle);
+
+        test.questions.forEach((q, index) => {
+            const questionDiv = document.createElement("div");
+            questionDiv.style.border = "1px solid white";
+            questionDiv.style.padding = "10px";
+            questionDiv.style.marginBottom = "10px";
+
+            const questionText = document.createElement("p");
+            questionText.textContent = `${index + 1}. ${q.question_text}`;
+            questionDiv.appendChild(questionText);
+
+            if (q.question_type === "multiple") {
+                q.choices.forEach(choice => {
+                    const choiceP = document.createElement("p");
+                    choiceP.textContent = `- ${choice.choice_text}${choice.is_correct ? " (Correct)" : ""}`;
+                    questionDiv.appendChild(choiceP);
+                });
+            } else if (q.question_type === "short") {
+                const short_answer_box = document.createElement("input")
+                short_answer_box.placeholder = "Your Answer"
+                short_answer_box.className = "student_short_answers"
+                questionDiv.appendChild(short_answer_box)
+            }
+            viewContainer.appendChild(questionDiv);
+
+
+            
+        });
+            const finish_button = document.createElement("button")
+            finish_button.style.display = "flex"
+            finish_button.innerText = "Finish Test"
+            viewContainer.insertAdjacentElement("afterend", finish_button)
+    })
+
+    
 </script>
 </html>
