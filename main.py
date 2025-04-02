@@ -351,7 +351,58 @@ def submit_answers():
     except Exception as e:
         print("Error submitting answers:", e)
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/test_responses/<int:test_id>")
+def get_all_responses_for_test(test_id):
+    # Query all student answers for this test_id
+    query = text("""
+        SELECT student_fullname, question_id, short_answer_text, selected_choice_id
+        FROM student_answers
+        WHERE test_id = :test_id
+    """)
+    results = db.session.execute(query, {"test_id": test_id}).fetchall()
 
+    # Structure results grouped by student
+    responses = {}
+    for row in results:
+        student = row.student_fullname
+        if student not in responses:
+            responses[student] = []
+        responses[student].append({
+            "question_id": row.question_id,
+            "short_answer": row.short_answer_text,
+            "choice_id": row.selected_choice_id
+        })
+
+    return jsonify(responses)
+
+@app.route("/api/save_score", methods=["POST"])
+def save_score():
+    data = request.get_json()
+    student = data["student_fullname"]
+    test_id = data["test_id"]
+    score = data["score"]
+
+    # Check if this student and test already has a recorded score
+    existing = db.session.execute(text("""
+        SELECT * FROM student_scores
+        WHERE student_fullname = :student AND test_id = :test_id
+    """), {"student": student, "test_id": test_id}).fetchone()
+
+    if existing:
+        db.session.execute(text("""
+            UPDATE student_scores
+            SET score = :score
+            WHERE student_fullname = :student AND test_id = :test_id
+        """), {"score": score, "student": student, "test_id": test_id})
+    else:
+        db.session.execute(text("""
+            INSERT INTO student_scores (student_fullname, test_id, score)
+            VALUES (:student, :test_id, :score)
+        """), {"student": student, "test_id": test_id, "score": score})
+
+    db.session.commit()
+    return jsonify({"message": "Score saved successfully!"})
 
 if __name__ == '__main__':
         app.run(debug=True)
