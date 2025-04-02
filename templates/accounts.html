@@ -87,20 +87,39 @@
         <div class="div-body-content">
             <h1>Accounts</h1>
             {% block body %}
-                    {% if account_type == 'teacher' %}
-                    <ul>
-                        <li>{{ teacher[0] }}</li>  
-                        <li>{{ teacher[1] }}</li> 
-                        <li>{{ teacher[2] }}</li> 
-                    </ul>
-
-
-                    {% endif%}
-
-
-            {% endblock %}
+            <select id="filter-select">
+              <option value="both" {% if selected_type == 'both' %}selected{% endif %}>Show Both</option>
+              <option value="teacher" {% if selected_type == 'teacher' %}selected{% endif %}>Teachers</option>
+              <option value="student" {% if selected_type == 'student' %}selected{% endif %}>Students</option>
+            </select>
+            
+            <div id="account-list">
+              {% if selected_type in ['teacher', 'both'] %}
+                <h2>Teachers</h2>
+                <ul>
+                  {% for t in teachers %}
+                    <li>{{ t.teacher_fullname }} ({{ t.teacher_username }})</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            
+              {% if selected_type in ['student', 'both'] %}
+                <h2>Students</h2>
+                <ul>
+                  {% for s in students %}
+                    <li>{{ s.student_fullname }} ({{ s.student_username }})</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </div>            
         </div>
     </div>
-    
+{% endblock %}
 </body>
+<script>
+  document.getElementById("filter-select").addEventListener("change", function () {
+      const selected = this.value;
+      window.location.href = `/account?type=${selected}`;
+  });
+</script>
 </html>

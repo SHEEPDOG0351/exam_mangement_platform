@@ -74,17 +74,18 @@ class Student_Test_Scores(db.Model):
 def index():
     return render_template('index.html')
 
-@app.route('/account', methods = ['GET', 'POST'])
+@app.route('/account', methods=['GET', 'POST'])
 def account():
-    account_type = request.args.get('type')
-    accounts = []
-    if account_type == ' teacher':
-        teachers = conn.execute(text('select * from teacher')).all()
-        student = conn.execute(text('select * from student')).all()
+    account_type = request.args.get('type', 'both')
+    teachers = conn.execute(text('SELECT * FROM teacher')).fetchall()
+    students = conn.execute(text('SELECT * FROM student')).fetchall()
 
-   
-
-    return render_template('accounts.html', accounts=accounts, selected_type=account_type)
+    return render_template(
+        'accounts.html',
+        teachers=teachers,
+        students=students,
+        selected_type=account_type
+    )
 
 @app.route('/Login', methods = ['GET', 'POST'])
 def login():
@@ -126,7 +127,7 @@ def login():
                 session['username'] = username
                 session['account_type'] = account_type
                 
-                return render_template('accounts.html', type='both')  
+                return redirect('/account?type=both')
             else:
                 error = "Invalid username, full name, or password for teacher"
                 return render_template('login.html', error=error)
