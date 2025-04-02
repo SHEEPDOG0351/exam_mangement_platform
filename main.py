@@ -96,6 +96,15 @@ def login():
         fullname = request.form['fullname']
         account_type = request.form['account_type']
 
+        print("Submitted:", username, fullname, password, account_type)
+
+        teacher = Teacher.query.filter_by(teacher_username=username).first()
+        if teacher:
+            print("DB found teacher:", teacher.teacher_username, teacher.teacher_fullname)
+        else:
+            print("No matching teacher username found.")
+
+
         if not username or not password or not fullname:
             error = "All fields (Full Name, Username, and Password) are required"
             return render_template('login.html', error=error)
@@ -116,7 +125,7 @@ def login():
             if teacher and teacher.teacher_password == password:
                 session['username'] = username
                 session['account_type'] = account_type
-                return render_template('account.html', type='both')  
+                return render_template('accounts.html', type='both')  
             else:
                 error = "Invalid username, full name, or password for teacher"
                 return render_template('login.html', error=error)
@@ -221,9 +230,19 @@ def create_test():
 def get_test(test_id):
     test = Test.query.get_or_404(test_id)
 
+    # Count how many unique students submitted answers for this test
+    student_count_query = text("""
+        SELECT COUNT(DISTINCT student_fullname)
+        FROM student_answers
+        WHERE test_id = :test_id
+    """)
+    student_count = db.session.execute(student_count_query, {"test_id": test_id}).scalar()
+
     test_data = {
         "test_id": test.test_id,
         "test_name": test.test_name,
+        "teacher_fullname": test.teacher_fullname,
+        "student_count": student_count,
         "questions": []
     }
 
@@ -246,6 +265,7 @@ def get_test(test_id):
         test_data["questions"].append(question_data)
 
     return jsonify(test_data)
+
 
 @app.route('/api/test/<int:test_id>', methods=['DELETE']) # method for deleting test in edit side of test management section
 def delete_test(test_id): # method for deleting the test using the given test_id from the user 
