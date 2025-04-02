@@ -279,6 +279,14 @@
             <div class="view-body">
                 <h2 style="text-align: center;">View Test Below</h2>
                 <div class="view-body-content">
+                    <div class="select-container" style="display: flex; gap: 15px;">
+                        <p>Select what you want to display: </p>
+                        <select name="what-to-display" id="view-select">
+                            <option value="1">The Test Itself</option>
+                            <option value="2">A specifc student</option>
+                            <option value="3">All Students</option>
+                        </select>
+                    </div>
                     <input type="text" name="test ID" id="view-test-input" placeholder="Test ID">
                     <button id="view-load-test-btn">Load Test</button>
                 </div>
@@ -782,7 +790,7 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             // Now you can assign it to variables or populate the page
         }
 
-// ---------------------------------------------------------------------------- View Section -----------------------------------------------------------------------
+// --------------------------------------------------------------- View Section ------------------------------------------------------------
 
     const viewIDInput = document.getElementById("view-test-input")
     viewIDInput.addEventListener("keydown", function (event) { // checks for if the user presses enter in the Test ID input mentioned above
@@ -794,30 +802,33 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 
     const viewLoadTestsButton = document.getElementById("view-load-test-btn")
     viewLoadTestsButton.addEventListener("click", async function() {
-        const testID = viewIDInput.value // grabs test id used to pull test from database
-        const response = await fetch(`/api/test/${testID}`); // grabs the SQL data
-        const test = await response.json();
-        // Create and show teacher's name
-        const teacherName = document.createElement("h3");
-        teacherName.style.textAlign = "center";
-        teacherName.textContent = `Teacher: ${test.teacher_fullname}`;
-        const viewContainer = document.querySelector(".view-body-content");
-        viewContainer.innerHTML = "";
-        viewContainer.appendChild(teacherName);
+        const selection = document.getElementById("view-select").value;
 
-        // Create and show student count
-        const studentCount = document.createElement("h4");
-        studentCount.style.textAlign = "center";
-        studentCount.textContent = `Students who took this test: ${test.student_count}`;
-        viewContainer.appendChild(studentCount);
+        if (selection == 1) {
+            const testID = viewIDInput.value // grabs test id used to pull test from database
+            const response = await fetch(`/api/test/${testID}`); // grabs the SQL data
+            const test = await response.json();
+            // Create and show teacher's name
+            const teacherName = document.createElement("h3");
+            teacherName.style.textAlign = "center";
+            teacherName.textContent = `Teacher: ${test.teacher_fullname}`;
+            const viewContainer = document.querySelector(".view-body-content");
+            viewContainer.innerHTML = "";
+            viewContainer.appendChild(teacherName);
 
-        console.log(test)
+            // Create and show student count
+            const studentCount = document.createElement("h4");
+            studentCount.style.textAlign = "center";
+            studentCount.textContent = `Students who took this test: ${test.student_count}`;
+            viewContainer.appendChild(studentCount);
 
-        const questionTitle = document.createElement("h2");
-        questionTitle.style.textAlign = "center";
+            console.log(test)
 
-        questionTitle.textContent = test.test_name;
-        viewContainer.appendChild(questionTitle);
+            const questionTitle = document.createElement("h2");
+            questionTitle.style.textAlign = "center";
+
+            questionTitle.textContent = test.test_name;
+            viewContainer.appendChild(questionTitle);
 
         test.questions.forEach((q, index) => {
             const questionDiv = document.createElement("div");
@@ -845,13 +856,204 @@ document.getElementById("test-form").addEventListener("submit", async function(e
 
 
             
-        });
+            });
             const finish_button = document.createElement("button")
             finish_button.style.display = "flex"
             finish_button.innerText = "Finish Test"
             viewContainer.insertAdjacentElement("afterend", finish_button)
-    })
+        } else if (selection == 2) {
+            const student_input = document.createElement("input");
+            student_input.placeholder = "Student Name to Search For";
+            student_input.className = "search-student-input";
+            
+            const search_student_btn = document.createElement("button");
+            search_student_btn.innerText = "Search";
+            search_student_btn.className = "search-student-btn";
 
-    
+            const view_body_container = document.querySelector(".view-body-content");
+            view_body_container.innerHTML = ""; // Clears any old content
+            view_body_container.appendChild(student_input);
+            view_body_container.appendChild(search_student_btn);
+
+            student_input.addEventListener("keydown", function(event) {
+                if (event.key === "Enter") {
+                search_student_btn.click(); // simulate a click
+        }
+            })
+                search_student_btn.addEventListener("click", async function () {
+                    search_student_btn.style.display = "none";
+                    student_input.style.display = "none";
+
+                    const studentName = student_input.value.trim();
+                    const testID = viewIDInput.value.trim();
+
+                    if (!studentName || !testID) {
+                        alert("Please enter both a student name and a test ID.");
+                        return;
+                    }
+
+                    const viewContainer = document.querySelector(".view-body-content");
+                    viewContainer.innerHTML = "";
+
+                    try {
+                        const [testResponse, studentAnswersResponse] = await Promise.all([
+                            fetch(`/api/test/${testID}`),
+                            fetch(`/api/test_responses/${testID}`)
+                        ]);
+
+                        const test = await testResponse.json();
+                        const allAnswers = await studentAnswersResponse.json();
+                        const studentAnswers = allAnswers[studentName];
+
+                        if (!studentAnswers) {
+                            viewContainer.innerHTML = `<p>No responses found for student "${studentName}" on Test ID ${testID}.</p>`;
+                            return;
+                        }
+
+                        const title = document.createElement("h2");
+                        title.textContent = `Responses for: ${studentName}`;
+                        title.style.textAlign = "center";
+                        viewContainer.appendChild(title);
+
+                        for (let q of test.questions) {
+                            const answerData = studentAnswers.find(a => a.question_id === q.question_id);
+
+                            const questionDiv = document.createElement("div");
+                            questionDiv.style.border = "1px solid white";
+                            questionDiv.style.padding = "10px";
+                            questionDiv.style.marginBottom = "10px";
+
+                            const questionText = document.createElement("p");
+                            questionText.innerHTML = `<strong>${q.question_text}</strong>`;
+                            questionDiv.appendChild(questionText);
+
+                            if (q.question_type === "short") {
+                                const answer = answerData?.short_answer || "(No answer)";
+                                questionDiv.innerHTML += `<p><em>Short Answer:</em> ${answer}</p>`;
+                            } else if (q.question_type === "multiple") {
+                                const selectedChoice = q.choices.find(c => c.choice_id === answerData?.choice_id);
+                                const choiceText = selectedChoice ? selectedChoice.choice_text : "(No choice selected)";
+                                questionDiv.innerHTML += `<p><em>Selected Choice:</em> ${choiceText}</p>`;
+                            }
+
+                            viewContainer.appendChild(questionDiv);
+                        }
+                    } catch (err) {
+                        console.error("Error loading student test responses:", err);
+                        viewContainer.innerHTML = `<p style="color:red;">An error occurred while loading data. See console for details.</p>`;
+                    }
+
+                    // Score input section
+                    const scoreDiv = document.createElement("div");
+                    scoreDiv.style.textAlign = "center";
+                    scoreDiv.style.marginTop = "20px";
+
+                    const scoreInput = document.createElement("input");
+                    scoreInput.type = "number";
+                    scoreInput.placeholder = "Enter Total Score";
+                    scoreInput.style.padding = "10px";
+                    scoreInput.style.fontSize = "18px";
+                    scoreInput.style.marginRight = "10px";
+
+                    const saveScoreBtn = document.createElement("button");
+                    saveScoreBtn.textContent = "Save Score";
+                    saveScoreBtn.style.padding = "10px 20px";
+                    saveScoreBtn.style.fontSize = "18px";
+
+                    scoreDiv.appendChild(scoreInput);
+                    scoreDiv.appendChild(saveScoreBtn);
+                    viewContainer.appendChild(scoreDiv);
+
+                    // Save score to backend
+                    saveScoreBtn.addEventListener("click", async () => {
+                        const scoreValue = parseInt(scoreInput.value);
+                        if (isNaN(scoreValue)) {
+                            alert("Please enter a valid number for the score.");
+                            return;
+                        }
+
+                        const res = await fetch("/api/save_score", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                student_fullname: studentName,
+                                test_id: testID,
+                                score: scoreValue
+                            })
+                        });
+
+                        const result = await res.json();
+                        alert(result.message);
+                    });
+
+            });
+        } else if (selection == 3) {
+    const testID = viewIDInput.value.trim();
+    if (!testID) return alert("Please enter a test ID.");
+
+    const viewContainer = document.querySelector(".view-body-content");
+    viewContainer.innerHTML = "";
+
+    try {
+        const [testResponse, studentAnswersResponse] = await Promise.all([
+            fetch(`/api/test/${testID}`),
+            fetch(`/api/test_responses/${testID}`)
+        ]);
+
+        const test = await testResponse.json();
+        const allStudentAnswers = await studentAnswersResponse.json(); // This is a dict: { student_name: [answers] }
+
+        const title = document.createElement("h2");
+        title.textContent = `All Student Responses for Test: ${test.test_name}`;
+        title.style.textAlign = "center";
+        viewContainer.appendChild(title);
+
+        // Loop through each student and render their responses
+        Object.entries(allStudentAnswers).forEach(([studentName, answers]) => {
+            const studentSection = document.createElement("div");
+            studentSection.style.border = "2px solid white";
+            studentSection.style.padding = "15px";
+            studentSection.style.marginBottom = "20px";
+
+            const nameHeader = document.createElement("h3");
+            nameHeader.textContent = `Student: ${studentName}`;
+            studentSection.appendChild(nameHeader);
+
+            test.questions.forEach((q, index) => {
+                const answerData = answers.find(a => a.question_id === q.question_id);
+
+                const questionDiv = document.createElement("div");
+                questionDiv.style.border = "1px solid gray";
+                questionDiv.style.marginTop = "10px";
+                questionDiv.style.padding = "8px";
+
+                const questionLabel = document.createElement("p");
+                questionLabel.innerHTML = `<strong>${index + 1}. ${q.question_text}</strong>`;
+                questionDiv.appendChild(questionLabel);
+
+                if (q.question_type === "short") {
+                    const answer = answerData?.short_answer || "(No answer)";
+                    questionDiv.innerHTML += `<p><em>Short Answer:</em> ${answer}</p>`;
+                } else if (q.question_type === "multiple") {
+                    const selectedChoice = q.choices.find(c => c.choice_id === answerData?.choice_id);
+                    const choiceText = selectedChoice ? selectedChoice.choice_text : "(No choice selected)";
+                    questionDiv.innerHTML += `<p><em>Selected Choice:</em> ${choiceText}</p>`;
+                }
+
+                studentSection.appendChild(questionDiv);
+            });
+
+            viewContainer.appendChild(studentSection);
+        });
+
+    } catch (err) {
+        console.error("Error loading all student responses:", err);
+        viewContainer.innerHTML = `<p style="color:red;">An error occurred while loading data. See console for details.</p>`;
+    }
+}
+
+    });
 </script>
 </html>
