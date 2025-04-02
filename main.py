@@ -125,6 +125,7 @@ def login():
             if teacher and teacher.teacher_password == password:
                 session['username'] = username
                 session['account_type'] = account_type
+                
                 return render_template('accounts.html', type='both')  
             else:
                 error = "Invalid username, full name, or password for teacher"
