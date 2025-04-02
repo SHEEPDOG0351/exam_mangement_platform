@@ -782,7 +782,7 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             // Now you can assign it to variables or populate the page
         }
 
-// ----------------------------------- View Section -------------------------------
+// ---------------------------------------------------------------------------- View Section -----------------------------------------------------------------------
 
     const viewIDInput = document.getElementById("view-test-input")
     viewIDInput.addEventListener("keydown", function (event) { // checks for if the user presses enter in the Test ID input mentioned above
@@ -795,13 +795,23 @@ document.getElementById("test-form").addEventListener("submit", async function(e
     const viewLoadTestsButton = document.getElementById("view-load-test-btn")
     viewLoadTestsButton.addEventListener("click", async function() {
         const testID = viewIDInput.value // grabs test id used to pull test from database
-
         const response = await fetch(`/api/test/${testID}`); // grabs the SQL data
         const test = await response.json();
-        console.log(test)
-
+        // Create and show teacher's name
+        const teacherName = document.createElement("h3");
+        teacherName.style.textAlign = "center";
+        teacherName.textContent = `Teacher: ${test.teacher_fullname}`;
         const viewContainer = document.querySelector(".view-body-content");
         viewContainer.innerHTML = "";
+        viewContainer.appendChild(teacherName);
+
+        // Create and show student count
+        const studentCount = document.createElement("h4");
+        studentCount.style.textAlign = "center";
+        studentCount.textContent = `Students who took this test: ${test.student_count}`;
+        viewContainer.appendChild(studentCount);
+
+        console.log(test)
 
         const questionTitle = document.createElement("h2");
         questionTitle.style.textAlign = "center";
@@ -833,8 +843,13 @@ document.getElementById("test-form").addEventListener("submit", async function(e
             }
             viewContainer.appendChild(questionDiv);
 
-            document.getElementById("finish-test").style.display = "flex"
+
+            
         });
+            const finish_button = document.createElement("button")
+            finish_button.style.display = "flex"
+            finish_button.innerText = "Finish Test"
+            viewContainer.insertAdjacentElement("afterend", finish_button)
     })
 
     
